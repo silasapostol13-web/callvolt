@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CallVolt AI — GoHighLevel Workflow Spec</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf8;
+    --surface: #12151f;
+    --surface2: #181c28;
+    --surface3: #1f2435;
+    --accent: #f97316;
+    --accent2: #ea6c0a;
+    --orange: #f59e0b;
+    --pink: #ec4899;
+    --purple: #a855f7;
+    --text: #1a1a1a;
+    --muted: #8892a8;
+    --border: #1e293b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--orange);
+    background: rgba(245,158,11,0.12);
+    padding: 6px 14px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .header h1 { font-size: 2rem; margin-bottom: 8px; }
+  .header h1 span { color: var(--accent); }
+  .header p { color: var(--muted); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+  /* Workflow section */
+  .workflow-section {
+    margin-bottom: 48px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--bg);
+    background: var(--accent);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .section-header h2 { font-size: 1.2rem; }
+  .section-header .wf-type {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--purple);
+    background: rgba(168,85,247,0.12);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* Flow nodes */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-left: 16px;
+    border-left: 2px solid var(--border);
+    margin-left: 15px;
+  }
+  .node {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .node:hover { border-color: rgba(249,115,22,0.3); }
+  .node::before {
+    content: '';
+    position: absolute;
+    left: -18px;
+    top: 24px;
+    width: 16px;
+    height: 2px;
+    background: var(--border);
+  }
+
+  .node-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .nt-trigger { color: var(--orange); background: rgba(245,158,11,0.1); }
+  .nt-condition { color: var(--pink); background: rgba(236,72,153,0.1); }
+  .nt-action { color: var(--accent2); background: rgba(234,108,10,0.1); }
+  .nt-wait { color: var(--purple); background: rgba(168,85,247,0.1); }
+  .nt-webhook { color: var(--accent); background: rgba(249,115,22,0.1); }
+
+  .node h4 { font-size: 0.95rem; margin-bottom: 6px; }
+  .node p { color: var(--muted); font-size: 0.82rem; line-height: 1.5; }
+
+  .node-config {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .node-config .key { color: var(--accent); }
+  .node-config .val { color: var(--orange); }
+  .node-config .comment { color: #5a6578; }
+
+  .branch-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--pink);
+    margin: 8px 0 4px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .branch-label::before {
+    content: '↳';
+    font-size: 0.9rem;
+  }
+
+  /* Notes */
+  .impl-note {
+    background: rgba(234,108,10,0.06);
+    border: 1px solid rgba(234,108,10,0.15);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 20px 0;
+  }
+  .impl-note strong { color: var(--accent2); }
+  .impl-note p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+
+  .prereqs {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+  .prereqs h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--orange);
+    margin-bottom: 14px;
+  }
+  .prereq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .prereq-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: 8px;
+  }
+  .prereq-item .check { color: var(--accent); font-size: 1rem; flex-shrink: 0; }
+  .prereq-item span { font-size: 0.82rem; color: var(--muted); }
+
+  @media (max-width: 600px) {
+    .prereq-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="tag">Technical Spec</div>
+  <h1>GoHighLevel <span>Workflow Blueprint</span></h1>
+  <p>Complete automation spec for an AI receptionist system. Every trigger, condition, action, and webhook — mapped out and ready to build.</p>
+</div>
+
+<div class="prereqs">
+  <h3>Prerequisites — Set These Up First</h3>
+  <div class="prereq-grid">
+    <div class="prereq-item"><span class="check">✓</span><span><strong>GHL Sub-Account</strong> created for client with Twilio integration active</span></div>
+    <div class="prereq-item"><span class="check">✓</span><span><strong>Twilio Number</strong> provisioned and connected to GHL</span></div>
+    <div class="prereq-item"><span class="check">✓</span><span><strong>GHL Calendar</strong> set up with client's availability windows</span></div>
+    <div class="prereq-item"><span class="check">✓</span><span><strong>Custom Fields</strong>: call_type, service_needed, urgency_level, ai_transcript</span></div>
+    <div class="prereq-item"><span class="check">✓</span><span><strong>Pipeline</strong>: "Inbound Leads" with stages: New → Qualified → Booked → Completed</span></div>
+    <div class="prereq-item"><span class="check">✓</span><span><strong>Make/Zapier Webhook</strong> URL ready for AI processing handoff</span></div>
+  </div>
+</div>
+
+<!-- WORKFLOW 1 -->
+<div class="workflow-section">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <h2>Inbound Call → AI Agent Processing</h2>
+    <span class="wf-type">Primary Workflow</span>
+  </div>
+
+  <div class="flow">
+    <div class="node">
+      <span class="node-type nt-trigger">Trigger</span>
+      <h4>Inbound Phone Call</h4>
+      <p>Fires when any call comes in to the Twilio number connected to the client's GHL sub-account.</p>
+      <div class="node-config">
+        <span class="key">trigger:</span> <span class="val">"Call Status Changed"</span><br>
+        <span class="key">filter:</span> <span class="val">direction = "inbound"</span><br>
+        <span class="key">filter:</span> <span class="val">call_status = "completed"</span><br>
+        <span class="comment">// Fires after call ends so we have the recording URL</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Create/Update Contact</h4>
+      <p>If caller is new, create contact. If existing, update with latest call data.</p>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Create/Update Contact"</span><br>
+        <span class="key">phone:</span> <span class="val">{{call.from}}</span><br>
+        <span class="key">tag_add:</span> <span class="val">"inbound-call", "ai-processed"</span><br>
+        <span class="key">source:</span> <span class="val">"Inbound Call"</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-webhook">Webhook</span>
+      <h4>Send to Make.com for AI Processing</h4>
+      <p>Sends call data to Make.com scenario which handles AI transcription, intent classification, and response generation.</p>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Outbound Webhook"</span><br>
+        <span class="key">url:</span> <span class="val">{{make_webhook_url}}</span><br>
+        <span class="key">method:</span> <span class="val">POST</span><br>
+        <span class="key">body:</span><br>
+        &nbsp;&nbsp;<span class="key">contact_id:</span> <span class="val">{{contact.id}}</span><br>
+        &nbsp;&nbsp;<span class="key">phone:</span> <span class="val">{{contact.phone}}</span><br>
+        &nbsp;&nbsp;<span class="key">recording_url:</span> <span class="val">{{call.recording_url}}</span><br>
+        &nbsp;&nbsp;<span class="key">call_duration:</span> <span class="val">{{call.duration}}</span><br>
+        &nbsp;&nbsp;<span class="key">business_name:</span> <span class="val">"{{client_business_name}}"</span>
+      </div>
+    </div>
+
+    <div class="impl-note">
+      <p><strong>Make.com Scenario (built separately):</strong> Receives webhook → Transcribes recording via Whisper/Deepgram → Sends transcript to Claude/GPT with system prompt for intent classification → Returns: call_type, service_needed, urgency_level, customer_summary, should_book (boolean) → Sends result back to GHL via API.</p>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Update Contact with AI Results</h4>
+      <p>Make.com webhook response updates the contact's custom fields with AI-extracted data.</p>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Update Contact Field"</span><br>
+        <span class="key">call_type:</span> <span class="val">{{webhook.call_type}}</span> <span class="comment">// emergency | routine | quote | info</span><br>
+        <span class="key">service_needed:</span> <span class="val">{{webhook.service_needed}}</span><br>
+        <span class="key">urgency_level:</span> <span class="val">{{webhook.urgency}}</span> <span class="comment">// high | medium | low</span><br>
+        <span class="key">ai_transcript:</span> <span class="val">{{webhook.summary}}</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Add to Pipeline</h4>
+      <p>Creates an opportunity in the "Inbound Leads" pipeline at the appropriate stage.</p>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Add to Pipeline"</span><br>
+        <span class="key">pipeline:</span> <span class="val">"Inbound Leads"</span><br>
+        <span class="key">stage:</span> <span class="val">"Qualified"</span><br>
+        <span class="key">opportunity_name:</span> <span class="val">"{{contact.name}} - {{service_needed}}"</span>
+      </div>
+    </div>
+
+    <div class="branch-label">If urgency = "high"</div>
+    <div class="node">
+      <span class="node-type nt-condition">Condition Branch</span>
+      <h4>Route by Urgency Level</h4>
+      <div class="node-config">
+        <span class="key">if</span> <span class="val">urgency_level = "high"</span><br>
+        &nbsp;&nbsp;→ <span class="val">Send Internal Alert SMS to owner</span><br>
+        &nbsp;&nbsp;→ <span class="val">Send customer confirmation SMS (immediate)</span><br><br>
+        <span class="key">if</span> <span class="val">urgency_level = "medium"</span><br>
+        &nbsp;&nbsp;→ <span class="val">Send customer confirmation SMS</span><br>
+        &nbsp;&nbsp;→ <span class="val">Add to follow-up queue</span><br><br>
+        <span class="key">if</span> <span class="val">urgency_level = "low"</span><br>
+        &nbsp;&nbsp;→ <span class="val">Send customer "we'll be in touch" SMS</span><br>
+        &nbsp;&nbsp;→ <span class="val">Add to next-day follow-up queue</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW 2 -->
+<div class="workflow-section">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <h2>Missed Call → Instant Text-Back</h2>
+    <span class="wf-type">Recovery Workflow</span>
+  </div>
+
+  <div class="flow">
+    <div class="node">
+      <span class="node-type nt-trigger">Trigger</span>
+      <h4>Missed Call Detected</h4>
+      <div class="node-config">
+        <span class="key">trigger:</span> <span class="val">"Call Status Changed"</span><br>
+        <span class="key">filter:</span> <span class="val">call_status = "no-answer" OR "voicemail"</span><br>
+        <span class="key">filter:</span> <span class="val">direction = "inbound"</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Instant SMS Text-Back (within 60 seconds)</h4>
+      <p>Critical for lead recovery. Most customers will text back before calling a competitor.</p>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Send SMS"</span><br>
+        <span class="key">delay:</span> <span class="val">0 seconds</span><br>
+        <span class="key">message:</span> <span class="val">"Hi! Sorry we missed your call at {{business_name}}. We're available now — what can we help you with? Reply here or we'll call you right back."</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-wait">Wait</span>
+      <h4>Wait for Reply — 5 Minutes</h4>
+      <div class="node-config">
+        <span class="key">wait_type:</span> <span class="val">"reply"</span><br>
+        <span class="key">timeout:</span> <span class="val">5 minutes</span>
+      </div>
+    </div>
+
+    <div class="branch-label">If reply received → AI SMS conversation</div>
+    <div class="node">
+      <span class="node-type nt-webhook">Webhook</span>
+      <h4>Send Reply to Make.com for AI SMS Processing</h4>
+      <p>AI reads their text, determines intent, and continues the conversation via SMS to book the job.</p>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Outbound Webhook"</span><br>
+        <span class="key">url:</span> <span class="val">{{make_sms_webhook_url}}</span><br>
+        <span class="key">body:</span><br>
+        &nbsp;&nbsp;<span class="key">contact_id:</span> <span class="val">{{contact.id}}</span><br>
+        &nbsp;&nbsp;<span class="key">message:</span> <span class="val">{{contact.last_message}}</span><br>
+        &nbsp;&nbsp;<span class="key">context:</span> <span class="val">"missed_call_recovery"</span>
+      </div>
+    </div>
+
+    <div class="branch-label">If no reply → Callback attempt</div>
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Send Internal Alert for Manual Callback</h4>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Internal Notification"</span><br>
+        <span class="key">to:</span> <span class="val">{{owner_phone}}</span><br>
+        <span class="key">message:</span> <span class="val">"Missed call from {{contact.phone}} — no text reply after 5 min. Call back ASAP."</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW 3 -->
+<div class="workflow-section">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <h2>Post-Service Follow-Up & Review Request</h2>
+    <span class="wf-type">Retention Workflow</span>
+  </div>
+
+  <div class="flow">
+    <div class="node">
+      <span class="node-type nt-trigger">Trigger</span>
+      <h4>Opportunity Moved to "Completed"</h4>
+      <div class="node-config">
+        <span class="key">trigger:</span> <span class="val">"Pipeline Stage Changed"</span><br>
+        <span class="key">pipeline:</span> <span class="val">"Inbound Leads"</span><br>
+        <span class="key">stage:</span> <span class="val">"Completed"</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-wait">Wait</span>
+      <h4>Wait 2 Hours After Service</h4>
+      <div class="node-config">
+        <span class="key">wait:</span> <span class="val">2 hours</span><br>
+        <span class="comment">// Enough time for the customer to evaluate the work</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Send Thank-You + Review Request SMS</h4>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Send SMS"</span><br>
+        <span class="key">message:</span> <span class="val">"Hi {{contact.first_name}}! Thanks for choosing {{business_name}}. We hope everything went well! If you have a moment, a Google review helps us a lot: {{google_review_link}} — Thank you!"</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-wait">Wait</span>
+      <h4>Wait 30 Days</h4>
+      <div class="node-config">
+        <span class="key">wait:</span> <span class="val">30 days</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Reactivation Check-In</h4>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Send SMS"</span><br>
+        <span class="key">message:</span> <span class="val">"Hi {{contact.first_name}}, just checking in from {{business_name}}! Everything still running smoothly? If you ever need us, just reply to this text. We're here for you."</span><br>
+        <span class="key">tag_add:</span> <span class="val">"reactivation-sent"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW 4 -->
+<div class="workflow-section">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <h2>Stale Lead Re-Engagement</h2>
+    <span class="wf-type">Nurture Workflow</span>
+  </div>
+
+  <div class="flow">
+    <div class="node">
+      <span class="node-type nt-trigger">Trigger</span>
+      <h4>Contact Tag Added: "stale-lead"</h4>
+      <p>Tag applied manually or via automation when a qualified lead hasn't booked within 7 days.</p>
+      <div class="node-config">
+        <span class="key">trigger:</span> <span class="val">"Tag Added"</span><br>
+        <span class="key">tag:</span> <span class="val">"stale-lead"</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-action">Action</span>
+      <h4>Re-Engagement SMS</h4>
+      <div class="node-config">
+        <span class="key">action:</span> <span class="val">"Send SMS"</span><br>
+        <span class="key">message:</span> <span class="val">"Hi {{contact.first_name}}, we noticed you reached out about {{service_needed}} but we never got to help. Still need assistance? We've got availability this week — just reply and we'll get you scheduled."</span>
+      </div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-wait">Wait</span>
+      <h4>Wait 3 Days</h4>
+      <div class="node-config"><span class="key">wait:</span> <span class="val">3 days</span></div>
+    </div>
+
+    <div class="node">
+      <span class="node-type nt-condition">Condition</span>
+      <h4>Check if Reply Received</h4>
+      <div class="node-config">
+        <span class="key">if</span> <span class="val">replied = true</span> → <span class="val">Route to AI SMS handler</span><br>
+        <span class="key">if</span> <span class="val">replied = false</span> → <span class="val">Send final follow-up email</span><br>
+        &nbsp;&nbsp;<span class="key">subject:</span> <span class="val">"Still need help with {{service_needed}}?"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="impl-note" style="margin-top: 40px;">
+  <p><strong>Build Order:</strong> Start with Workflow 2 (Missed Call Text-Back) — it's the simplest, delivers immediate value, and proves the concept. Then build Workflow 1 (main AI pipeline). Save Workflows 3 and 4 for the second month once the core system is stable.</p>
+</div>
+
+</div>
+</body>
+</html>

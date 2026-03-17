@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CallVolt AI — Cold Outreach Sequences</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--s2:#fff8f3;--dark:#1a1a1a;--muted:#6b6560;--border:#e8e4e0;--accent:#f97316;--accent-light:#fff3e8;--accent-dark:#ea6c0a;--green:#16a34a;--blue:#2563eb;--red:#dc2626;--purple:#7c3aed}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--dark)}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 40px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:10}
+.brand{font-weight:800;font-size:0.95rem}.brand span{color:var(--accent)}
+.back{font-size:0.8rem;color:var(--muted);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px}
+.back:hover{color:var(--accent)}
+.hero{padding:48px 40px 36px;border-bottom:1px solid var(--border)}
+.hero-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.hero h1{font-size:1.9rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px}
+.hero p{color:var(--muted);font-size:0.9rem;line-height:1.6;max-width:560px}
+.tabs{display:flex;gap:6px;padding:20px 40px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:#fff}
+.stab{padding:8px 18px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.15s}
+.stab:hover{border-color:var(--accent);color:var(--dark)}
+.stab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.wrap{max-width:820px;margin:0 auto;padding:32px 40px 80px}
+.seq{display:none}.seq.active{display:block}
+.intro{background:var(--accent-light);border:1px solid rgba(249,115,22,0.2);border-left:3px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:28px}
+.intro h2{font-size:0.95rem;font-weight:700;margin-bottom:4px}
+.intro p{color:#7c3411;font-size:0.82rem;line-height:1.6}
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;transition:border-color 0.2s}
+.card:hover{border-color:rgba(249,115,22,0.3)}
+.card-head{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer}
+.card.open .card-head{border-bottom:1px solid var(--border)}
+.num{width:34px;height:34px;border-radius:8px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:500;font-size:0.78rem;flex-shrink:0}
+.num.alt{background:var(--dark)}
+.meta{flex:1}
+.meta h3{font-size:0.9rem;font-weight:700;margin-bottom:2px}
+.meta span{font-size:0.75rem;color:var(--muted)}
+.ch{padding:3px 10px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
+.ch-email{background:#eff6ff;color:var(--blue)}
+.ch-text{background:#f0fdf4;color:var(--green)}
+.ch-vm{background:#faf5ff;color:var(--purple)}
+.ch-call{background:#fef2f2;color:var(--red)}
+.arr{color:var(--muted);transition:transform 0.25s;font-size:0.9rem}
+.card.open .arr{transform:rotate(180deg)}
+.card-body{display:none;padding:20px}
+.card.open .card-body{display:block}
+.msg{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:20px;margin-bottom:12px;position:relative}
+.msg-label{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.subject{font-size:0.83rem;font-weight:700;color:var(--accent-dark);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.msg p{font-size:0.86rem;line-height:1.75;color:var(--dark)}
+.msg p+p{margin-top:10px}
+.ph{color:var(--accent);font-weight:600;background:var(--accent-light);padding:1px 4px;border-radius:3px}
+.copy-btn{position:absolute;top:14px;right:14px;padding:5px 13px;background:#fff;border:1.5px solid var(--border);border-radius:6px;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.copy-btn.copied{border-color:var(--green);color:var(--green);background:#f0fdf4}
+.tip{background:var(--accent-light);border:1px solid rgba(249,115,22,0.15);border-radius:8px;padding:12px 16px;font-size:0.81rem;line-height:1.6;color:#7c3411}
+.tip strong{font-weight:700}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span>Call</span>Volt AI</div>
+  <div style="width:1px;height:20px;background:var(--border)"></div>
+  <a class="back" href="index.html">← Back to Toolkit</a>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">Sales System · Step 1 of 4</div>
+  <h1>Cold Outreach Sequences</h1>
+  <p>5 touches over 14 days — email, text, voicemail. Pick the sequence that matches your prospect, copy each message, personalize the <span style="color:var(--accent);font-weight:600">[brackets]</span>, and send.</p>
+</div>
+
+<div class="tabs">
+  <button class="stab active" onclick="sw(this,'gen')">🎯 General — Any Business</button>
+  <button class="stab" onclick="sw(this,'trade')">🔧 Trades / Home Services</button>
+  <button class="stab" onclick="sw(this,'med')">🏥 Medical / Dental</button>
+  <button class="stab" onclick="sw(this,'law')">⚖️ Legal / Professional</button>
+  <button class="stab" onclick="sw(this,'call')">📞 Cold Call Script</button>
+</div>
+
+<div class="wrap">
+
+<!-- ── GENERAL ── -->
+<div class="seq active" id="seq-gen">
+  <div class="intro">
+    <h2>General Sequence — Default for any service business</h2>
+    <p>No industry jargon. Works for any business that relies on phone calls for new customers. Use this until you know enough about the industry to use a specific sequence.</p>
+  </div>
+
+  <div class="card open">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">01</div>
+      <div class="meta"><h3>The Hook — Pain Point Email</h3><span>Day 1 · Send first</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email</div>
+        <div class="subject">Subject: <span class="ph">[Company Name]</span> — what happens when a customer calls after hours?</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>Quick question — when a customer calls <span class="ph">[Company Name]</span> at 8 PM tonight, what do they hear?</p>
+        <p>If the answer is voicemail, you're probably losing 15–25 calls a month to whoever picks up first. At even $150 per job, that's $2,000–$4,000 walking out the door every month.</p>
+        <p>I built an AI phone agent that answers every call 24/7, qualifies the lead, and books the appointment — without anyone on your team lifting a finger. It sounds like a real person and costs less than a part-time hire.</p>
+        <p>Worth 10 minutes this week to see how it works?</p>
+        <p>— Silas<br>CallVolt AI<br><span class="ph">[your phone]</span> · silas@callvoltai.com</p>
+      </div>
+      <div class="tip"><strong>Before sending:</strong> Check their Google Business Profile. If they have no after-hours info, unanswered reviews, or show "Closes at 5pm" — mention it. "I noticed your GBP shows you close at 5..." makes it feel researched, not spammy.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">02</div>
+      <div class="meta"><h3>The Text Bump</h3><span>Day 3 · Text their cell if you have it</span></div>
+      <span class="ch ch-text">Text</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">SMS — Keep it short</div>
+        <p>Hey <span class="ph">[First Name]</span>, Silas here from CallVolt AI. Sent you an email about missed calls at <span class="ph">[Company Name]</span>. I've got a 2-min demo video — want me to send it over?</p>
+      </div>
+      <div class="tip"><strong>Two-step rule:</strong> Don't include the link in this first text. Just get a "yes" reply, then send the video. This doubles your click rate because they've committed before seeing it.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">03</div>
+      <div class="meta"><h3>The Social Proof Email</h3><span>Day 6</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email — Reply to thread</div>
+        <div class="subject">Subject: Re: <span class="ph">[Company Name]</span> — what happens when a customer calls after hours?</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>Following up on my last note. Here's what typically happens in the first 30 days once a business goes live with the AI agent:</p>
+        <p>They recover 12–18 calls they would have missed — calls that would have gone to voicemail or a competitor. At a 50% booking rate and a $200 average ticket, that's $1,200–$3,600 in recovered revenue in month one.</p>
+        <p>Setup takes less than a week. You don't touch any technology — I build everything and hand it to you running.</p>
+        <p>Happy to show you exactly how it would work for <span class="ph">[Company Name]</span>. Just reply "sure" and I'll send a couple of times.</p>
+        <p>— Silas</p>
+      </div>
+      <div class="tip"><strong>No case study yet?</strong> Be transparent: "Based on what we typically see with businesses your size..." Honesty builds more trust than fabricated numbers.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">04</div>
+      <div class="meta"><h3>The Voicemail Drop</h3><span>Day 9 · Under 35 seconds</span></div>
+      <span class="ch ch-vm">Voicemail</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Voicemail Script — Read this word for word</div>
+        <p>"Hey <span class="ph">[First Name]</span>, this is Silas with CallVolt AI. I help service businesses make sure they never miss another customer call — even at 2 AM.</p>
+        <p>I've got an AI phone agent that answers every call, qualifies the lead, and books the job. No staff needed, live in under a week.</p>
+        <p>I'd love just 10 minutes to show you how it works. My number is <span class="ph">[your phone]</span>. Again — <span class="ph">[your phone]</span>. Talk soon."</p>
+      </div>
+      <div class="tip"><strong>Tools:</strong> Use Slybroadcast or Drop Cowboy to drop ringless voicemails at scale without calling each person manually. Speak slowly. Say your number twice.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">05</div>
+      <div class="meta"><h3>The Breakup Email</h3><span>Day 14 · Final touch</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email — Keep this very short</div>
+        <div class="subject">Subject: Closing the loop</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>I've reached out a few times and I know you're busy — running a business doesn't leave much time for sales emails.</p>
+        <p>Last one from me: if capturing more calls and booking more jobs without hiring anyone sounds interesting, just reply "yes" and I'll send a 2-minute demo video. No call required.</p>
+        <p>If the timing's off, no worries. I'll check back in a few months.</p>
+        <p>— Silas</p>
+      </div>
+      <div class="tip"><strong>Why this works:</strong> Breakup emails consistently get the highest reply rate in any sequence. The "I'll go away" framing removes pressure and triggers loss aversion. Keep it short — 4 sentences max.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TRADES ── -->
+<div class="seq" id="seq-trade">
+  <div class="intro">
+    <h2>Trades &amp; Home Services — Plumbing, HVAC, Electrical, Pest Control, Roofing, Landscaping</h2>
+    <p>Leans into emergency call urgency and after-hours revenue loss. Highest pain and clearest ROI of any segment.</p>
+  </div>
+
+  <div class="card open">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">01</div>
+      <div class="meta"><h3>The Emergency Revenue Hook</h3><span>Day 1</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email</div>
+        <div class="subject">Subject: What happens when someone calls <span class="ph">[Company Name]</span> at 9 PM with an emergency?</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>When a homeowner has a burst pipe — or their AC dies on the hottest night of the year — they call the first 3 companies they find. They go with whoever picks up.</p>
+        <p>If they hit your voicemail, they're already calling your competitor.</p>
+        <p>I built an AI phone agent for service businesses that answers every call 24/7, asks the right diagnostic questions, and books the appointment into your calendar. No answering service. No extra staff. Live in under a week.</p>
+        <p>The average trade business misses 15–20 after-hours calls a month. Capturing even half of those at a $200 ticket means $1,500–$2,000 in jobs that were going to someone else.</p>
+        <p>10 minutes to see it live?</p>
+        <p>— Silas<br>CallVolt AI<br><span class="ph">[your phone]</span> · silas@callvoltai.com</p>
+      </div>
+      <div class="tip"><strong>Personalize the emergency:</strong> Plumbing = burst pipe. HVAC = AC in summer / heat in winter. Pest = termites. Electrical = power out. The more specific the scenario, the better the reply rate.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">02</div><div class="meta"><h3>The Text Bump</h3><span>Day 3</span></div>
+      <span class="ch ch-text">Text</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">SMS</div>
+        <p>Hey <span class="ph">[First Name]</span>, Silas from CallVolt AI. Emailed you about missed after-hours calls at <span class="ph">[Company Name]</span>. Got a 2-min video of the AI agent handling a real emergency call — want me to send it?</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">03</div><div class="meta"><h3>The ROI Email</h3><span>Day 6</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email — Reply to thread</div>
+        <div class="subject">Subject: Re: What happens when someone calls <span class="ph">[Company Name]</span> at 9 PM...</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>Quick follow-up with some numbers:</p>
+        <p>The average <span class="ph">[trade type]</span> company misses 20–30% of inbound calls — especially after hours, during jobs, and on weekends. If you get 60 calls a month and miss even 15 at a $200 ticket and 50% booking rate, that's $1,500/month going to competitors.</p>
+        <p>Our AI captures about 85% of those missed calls. Runs 24/7. Live in under a week.</p>
+        <p>Want me to run the exact numbers for <span class="ph">[Company Name]</span>? Reply "run it" and I'll send a custom breakdown in 24 hours.</p>
+        <p>— Silas</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">04</div><div class="meta"><h3>The Voicemail</h3><span>Day 9</span></div>
+      <span class="ch ch-vm">Voicemail</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Voicemail Script</div>
+        <p>"Hey <span class="ph">[First Name]</span>, Silas with CallVolt AI. I help <span class="ph">[trade type]</span> businesses make sure they never miss an emergency call after hours — because that's when customers are most desperate and most willing to pay.</p>
+        <p>10 minutes to show you how it works. <span class="ph">[your phone]</span> — again — <span class="ph">[your phone]</span>. Talk soon."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">05</div><div class="meta"><h3>The Breakup Email</h3><span>Day 14</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email</div>
+        <div class="subject">Subject: Last one from me</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>Don't want to be that guy who keeps emailing. Last one from me.</p>
+        <p>If capturing more after-hours jobs without hiring anyone sounds useful, just reply "interested" — I'll send a 2-minute video. No call needed.</p>
+        <p>If the timing's off, totally understand. I'll circle back.</p>
+        <p>— Silas</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MEDICAL ── -->
+<div class="seq" id="seq-med">
+  <div class="intro">
+    <h2>Medical &amp; Dental — Clinics, dentists, therapists, specialists, urgent care</h2>
+    <p>Pain: missed appointment revenue, front desk overload, after-hours new patient calls. Note: AI handles scheduling only — never medical advice.</p>
+  </div>
+
+  <div class="card open">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">01</div><div class="meta"><h3>The New Patient Revenue Hook</h3><span>Day 1</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email</div>
+        <div class="subject">Subject: <span class="ph">[Practice Name]</span> — how many new patient calls go to voicemail each day?</div>
+        <p>Hey <span class="ph">[Dr./First Name]</span>,</p>
+        <p>Most practices lose 20–40% of new patient calls to voicemail — especially during lunch, busy mornings, and after hours. Those people call the next practice on their list.</p>
+        <p>I built an AI phone agent for medical practices that answers every call, handles scheduling and basic FAQs, and routes urgent calls to staff — 24/7, without any extra headcount. It has a real conversation, not a phone tree.</p>
+        <p>At a new patient value of $300–$800, even recovering 5 calls a month is $1,500–$4,000 in additional revenue.</p>
+        <p>Worth a 10-minute demo?</p>
+        <p>— Silas<br>CallVolt AI<br><span class="ph">[your phone]</span> · silas@callvoltai.com</p>
+      </div>
+      <div class="tip"><strong>HIPAA note:</strong> The AI handles scheduling and FAQs only — not medical advice or diagnosis. Lead with this to get ahead of the concern before they raise it.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">02–05</div>
+      <div class="meta"><h3>Remaining touches: use General sequence</h3><span>Days 3, 6, 9, 14</span></div>
+      <span class="ch ch-email">Mixed</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="tip">Use the General sequence for touches 2–5. Swap "[Company Name]" → "[Practice Name]". Replace job/ticket language with "new patient value." The breakup email works identically.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LEGAL ── -->
+<div class="seq" id="seq-law">
+  <div class="intro">
+    <h2>Legal &amp; Professional Services — Law firms, accountants, financial advisors, consultants</h2>
+    <p>Pain: high-value prospects calling during court/meetings and hitting voicemail. One missed intake call can be a $5,000–$50,000 engagement gone.</p>
+  </div>
+
+  <div class="card open">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">01</div><div class="meta"><h3>The High-Value Missed Call Hook</h3><span>Day 1</span></div>
+      <span class="ch ch-email">Email</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Email</div>
+        <div class="subject">Subject: When a potential client calls <span class="ph">[Firm Name]</span> after hours — what happens?</div>
+        <p>Hey <span class="ph">[First Name]</span>,</p>
+        <p>People don't plan when they need legal help. They call when the situation becomes urgent — usually evenings, weekends, right after an incident. If they hit your voicemail, they call the next firm.</p>
+        <p>In your world, one missed intake call can mean a $5,000–$50,000 engagement going to someone who answered.</p>
+        <p>I built an AI phone agent that handles after-hours intake — qualifies the matter, captures contact info, schedules a consultation, and flags urgent situations for immediate callback. No live person required after hours.</p>
+        <p>Happy to show you a 10-minute demo — no tech knowledge needed on your end.</p>
+        <p>— Silas<br>CallVolt AI<br><span class="ph">[your phone]</span> · silas@callvoltai.com</p>
+      </div>
+      <div class="tip"><strong>Legal note:</strong> Never say the AI gives legal advice — it handles intake and scheduling only. Attorneys are sensitive to UPL (unauthorized practice of law). Get ahead of it in your pitch.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num">02–05</div>
+      <div class="meta"><h3>Remaining touches: use General sequence</h3><span>Days 3, 6, 9, 14</span></div>
+      <span class="ch ch-email">Mixed</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="tip">Use General sequence for touches 2–5. Replace "$200 ticket" with "potential engagement value." The ROI math is even more compelling for high-ticket services.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── COLD CALL ── -->
+<div class="seq" id="seq-call">
+  <div class="intro">
+    <h2>Cold Call Script — Works for any industry</h2>
+    <p>Goal is not to sell on the call. Goal is to book a 10-minute demo. Read this out loud 5 times before your first call.</p>
+  </div>
+
+  <div class="card open">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num alt">→</div>
+      <div class="meta"><h3>The Opener — First 15 seconds decide everything</h3><span>Don't improvise this part</span></div>
+      <span class="ch ch-call">Call</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Opening — say this confidently, no pausing</div>
+        <p>"Hey <span class="ph">[First Name]</span>, this is Silas — I know I'm catching you out of the blue so I'll be quick. I help service businesses set up an AI that answers every call 24/7 and books jobs automatically. I've got a quick question — what happens when a customer calls your company after hours right now?"</p>
+      </div>
+      <div class="tip"><strong>Then shut up.</strong> Let them answer. Their answer tells you everything — if they say "voicemail" or "I don't know" you have your in. If they say "we have coverage" ask "and what about overflow calls when the line's busy?"</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num alt">→</div>
+      <div class="meta"><h3>The Pivot to Demo</h3><span>After they answer your question</span></div>
+      <span class="ch ch-call">Call</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">After their answer</div>
+        <p>"That's exactly the gap I help close. I'm not going to pitch you right now — I'd rather just show you. Do you have 10 minutes sometime this week where I can call you and literally let you listen to the AI handle a call in real time? You'll know in 2 minutes if it's worth your time."</p>
+      </div>
+      <div class="tip"><strong>Key phrase:</strong> "Let you listen to the AI in real time." This is specific and low-commitment. They're not agreeing to a pitch — they're agreeing to listen to a phone call.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num alt">→</div>
+      <div class="meta"><h3>If They Say "Send Me Info First"</h3><span>Common deflection</span></div>
+      <span class="ch ch-call">Call</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Response</div>
+        <p>"Absolutely — I'll send you a 2-minute video right now that shows the AI handling a real call. But I'll be honest with you — most people who just get info never have time to sit down and watch it. Can I grab 10 minutes with you first and then send the full breakdown after? That way you get the context to make it actually useful."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+      <div class="num alt">→</div>
+      <div class="meta"><h3>If They Say "Not Interested"</h3><span>Don't give up immediately</span></div>
+      <span class="ch ch-call">Call</span>&nbsp;<span class="arr">▾</span>
+    </div>
+    <div class="card-body">
+      <div class="msg">
+        <button class="copy-btn" onclick="cp(this)">Copy</button>
+        <div class="msg-label">Response — one gentle push</div>
+        <p>"Totally fair. Before I let you go — is it that AI phone agents aren't something you'd consider, or is this just bad timing? I don't want to follow up if it's genuinely not a fit, but if it's just timing I'm happy to circle back in a month or two."</p>
+      </div>
+      <div class="tip"><strong>Then honor whatever they say.</strong> If they say not a fit — thank them and hang up. If they say bad timing — ask what month works and put it in your calendar. Never argue.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script>
+function sw(btn,id){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.seq').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('seq-'+id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cp(btn){
+  const msg=btn.closest('.msg');
+  const parts=[];
+  const subj=msg.querySelector('.subject');
+  if(subj) parts.push(subj.innerText);
+  msg.querySelectorAll('p').forEach(p=>parts.push(p.innerText));
+  navigator.clipboard.writeText(parts.join('\n\n')).then(()=>{
+    btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},2000);
+  });
+}
+</script>
+</body>
+</html>

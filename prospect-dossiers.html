@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospect Dossiers — CallVolt AI — Prospect List</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0d11;--surface:#13161e;--surface2:#1a1e2a;--surface3:#222738;--accent:#10b981;--accent2:#06b6d4;--gold:#f59e0b;--red:#ef4444;--purple:#a78bfa;--text:#edf0f7;--muted:#8390a5;--border:#252a3a;--green-dim:rgba(16,185,129,0.1);--blue-dim:rgba(6,182,212,0.1);--gold-dim:rgba(245,158,11,0.1);--red-dim:rgba(239,68,68,0.1)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.topbar{position:sticky;top:0;z-index:100;background:rgba(11,13,17,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:20px}
+.topbar h1{font-size:1rem;font-weight:700;white-space:nowrap}
+.topbar h1 span{color:var(--accent)}
+.filter-pills{display:flex;gap:6px;flex:1;overflow-x:auto}
+.filter-pills::-webkit-scrollbar{display:none}
+.pill{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Sora',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.pill:hover{color:var(--text);border-color:var(--text)}
+.pill.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+.pill.plumbing.active{background:#10b981;color:#000;border-color:#10b981}
+.pill.hvac.active{background:#06b6d4;color:#000;border-color:#06b6d4}
+.pill.pest.active{background:#a78bfa;color:#000;border-color:#a78bfa}
+.topbar .count{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--muted);white-space:nowrap}
+
+.container{max-width:1100px;margin:0 auto;padding:28px 24px 80px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:20px;overflow:hidden;transition:border-color 0.2s}
+.card:hover{border-color:rgba(16,185,129,0.3)}
+.card.priority-a{border-left:4px solid var(--accent)}
+.card.priority-b{border-left:4px solid var(--gold)}
+.card.priority-c{border-left:4px solid var(--muted)}
+
+.card-top{padding:24px 28px;cursor:pointer;display:flex;gap:20px;align-items:flex-start}
+.card-top:hover{background:rgba(255,255,255,0.01)}
+
+.card-priority{font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:600;padding:4px 10px;border-radius:6px;flex-shrink:0;margin-top:2px}
+.priority-a .card-priority{background:var(--green-dim);color:var(--accent)}
+.priority-b .card-priority{background:var(--gold-dim);color:var(--gold)}
+.priority-c .card-priority{background:rgba(131,144,165,0.1);color:var(--muted)}
+
+.card-main{flex:1;min-width:0}
+.card-main h2{font-size:1.15rem;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card-main h2 .ind-tag{font-size:0.62rem;font-weight:600;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:0.5px}
+.ind-plumbing{background:var(--green-dim);color:var(--accent)}
+.ind-hvac{background:var(--blue-dim);color:var(--accent2)}
+.ind-pest{background:rgba(167,139,250,0.12);color:var(--purple)}
+
+.card-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:8px}
+.meta-item{font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:5px}
+.meta-item strong{color:var(--text);font-weight:600}
+.meta-item .star{color:var(--gold)}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.call-btn{background:var(--accent);color:#000;padding:8px 20px;border-radius:8px;font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;text-decoration:none;transition:all 0.15s;display:inline-block}
+.call-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.arrow{color:var(--muted);font-size:1.2rem;transition:transform 0.3s}
+.card.open .arrow{transform:rotate(180deg)}
+
+.card-body{display:none;border-top:1px solid var(--border)}
+.card.open .card-body{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.body-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.body-section{padding:24px 28px;border-bottom:1px solid var(--border)}
+.body-section:nth-child(odd){border-right:1px solid var(--border)}
+.body-section h3{font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px}
+
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:0.85rem}
+.info-row .lbl{color:var(--muted)}
+.info-row .val{font-weight:500;text-align:right}
+
+.rundown{padding:24px 28px;border-bottom:1px solid var(--border);grid-column:1/-1}
+.rundown h3{font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:14px}
+.rundown p{font-size:0.88rem;line-height:1.7;color:var(--text)}
+
+.questions-section{padding:24px 28px;grid-column:1/-1;border-bottom:1px solid var(--border)}
+.questions-section h3{font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent2);margin-bottom:14px}
+.q-list{display:flex;flex-direction:column;gap:8px}
+.q-item{background:var(--surface2);border-radius:8px;padding:12px 16px;font-size:0.85rem;line-height:1.5;display:flex;gap:10px}
+.q-item .num{font-family:'JetBrains Mono',monospace;color:var(--accent2);font-weight:600;flex-shrink:0}
+
+.opener-section{padding:24px 28px;grid-column:1/-1;background:var(--surface2)}
+.opener-section h3{font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:14px}
+.opener-box{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:18px 22px;font-size:0.9rem;line-height:1.7;position:relative}
+.copy-btn{position:absolute;top:10px;right:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.65rem;transition:all 0.15s}
+.copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+.status-row{padding:16px 28px;background:var(--surface2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.status-row label{font-size:0.78rem;color:var(--muted);font-weight:500}
+.status-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-family:'Sora',sans-serif;font-size:0.82rem;outline:none}
+.notes-input{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;font-family:'Sora',sans-serif;font-size:0.82rem;outline:none}
+.notes-input::placeholder{color:#4a5060}
+
+@media(max-width:768px){
+  .body-grid{grid-template-columns:1fr}
+  .body-section:nth-child(odd){border-right:none}
+  .card-top{flex-direction:column;gap:12px}
+  .card-right{flex-direction:row;align-items:center}
+  .card-meta{gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1><span>Prospect</span> Dossiers</h1>
+  <div class="filter-pills">
+    <button class="pill active" onclick="filterCards('all',this)">All</button>
+    <button class="pill plumbing" onclick="filterCards('plumbing',this)">🔧 Plumbing</button>
+    <button class="pill hvac" onclick="filterCards('hvac',this)">❄️ HVAC</button>
+    <button class="pill pest" onclick="filterCards('pest',this)">🐛 Pest</button>
+    <button class="pill" onclick="filterCards('a',this)">Priority A</button>
+    <button class="pill" onclick="filterCards('b',this)">Priority B</button>
+  </div>
+  <span class="count" id="countLabel">8 Priority A targets</span>
+</div>
+
+<div class="container" id="cardContainer">
+<!-- Cards injected by JS -->
+</div>
+
+<script>
+const companies = [
+  // ═══ PLUMBING ═══
+  {
+    name: "Charlotte Plumbing Masters",
+    industry: "plumbing",
+    priority: "a",
+    owner: "Diyan Mitev",
+    phone: "(704) 727-4110",
+    altPhone: "(704) 949-2525",
+    website: "charlotteplumbingmasters.com",
+    address: "13534 Plaza Rd Ext #127, Your Market 28215",
+    rating: 4.8,
+    reviews: 458,
+    hours: "Mon–Fri 8AM–7PM, Closed weekends",
+    founded: "2016",
+    teamSize: "Small — owner + handful of techs (Diyan, John, Mike mentioned in reviews)",
+    services: "Leak repair, drain cleaning, water heater, repiping, backflow, commercial plumbing",
+    crm: "Unknown — uses Thumbtack for leads",
+    socialPresence: "Facebook (213 likes), Instagram (44 followers) — minimal digital presence",
+    rundown: "This is a small, owner-operated LLC founded by Diyan Mitev, who transitioned from a cabinetry/furniture background into plumbing. He's the sole member on the BBB listing — meaning he's likely managing everything himself. The company closes at 7PM on weekdays and is completely closed on weekends. For a company that advertises emergency plumbing, that's a huge gap. Reviews mention same-day service and techs like John and Dion by name, suggesting a tight crew. They also have a Spanish-speaking technician, which signals awareness of the diverse Charlotte market. Their Instagram has only 44 followers and 3 posts — they're not investing in marketing. This is a classic small shop that's good at the work but probably overwhelmed by the business side. An AI receptionist would be transformative for them.",
+    painPoints: ["Closed evenings and all weekend — missing every after-hours emergency call", "Owner likely answering phone personally while managing jobs", "Minimal digital/social presence suggests no dedicated office staff", "Advertises emergency service but has no after-hours coverage"],
+    questions: [
+      "Who's answering your phones right now when you're on a job site?",
+      "What happens to calls that come in after 7 PM or on weekends — are those just going to voicemail?",
+      "Have you ever tracked how many calls you miss in a month?",
+      "Are you using any CRM or scheduling software, or is it mostly manual?",
+      "If I could show you a way to capture every after-hours call without hiring anyone, would that be worth 10 minutes of your time?"
+    ],
+    opener: "Hey Diyan, quick question — I noticed Charlotte Plumbing Masters closes at 7 PM and is closed weekends. What happens when someone has a burst pipe at 9 PM on a Saturday and calls your number? Because I help plumbing companies in Charlotte make sure every single one of those calls gets answered and booked — without you hiring anyone or losing sleep."
+  },
+  {
+    name: "Super Cool HVAC",
+    industry: "hvac",
+    priority: "a",
+    owner: "Mitchell Demitruk",
+    phone: "(704) 899-2665",
+    altPhone: "",
+    website: "supercoolcharlotte.com",
+    address: "954 N Davidson St, Your Market 28206 (NoDa/Belmont)",
+    rating: 5.0,
+    reviews: 647,
+    hours: "Mon–Fri 8AM–6PM, Sat–Sun 9AM–3PM",
+    founded: "2020",
+    teamSize: "Small — owner-operated. Mitchell + techs (Courtland, Omar, Noah, Jake mentioned)",
+    services: "Residential & commercial HVAC, installs, repairs, maintenance, eco-friendly focus",
+    crm: "Unknown — takes calls directly, active on Reddit providing free advice",
+    socialPresence: "Active on Reddit Charlotte sub, Facebook page, featured by Ford for EV fleet",
+    rundown: "Mitchell Demitruk is a former Daimler Trucks engineer with a Kettering University degree who started Super Cool in 2020. He's young, ambitious, and deeply values authenticity — his website says 'you won't see us on billboards' and 'we don't have some private equity firm pressing our technicians to sell.' He runs an all-electric vehicle fleet (5 Ford e-Transit vans) and is active on the Charlotte Reddit community, giving free HVAC advice without pitching his business. Reviews consistently call out Mitchell by name as being honest, thorough, and personally involved. This is a quality-obsessed small operation that closes at 6PM weekdays and 3PM on weekends — meaning the highest-urgency calls (evening AC failures in Charlotte summers) are hitting voicemail. Mitchell is clearly the kind of owner who would adopt tech if it aligns with his values. An AI agent that maintains his customer-first, honest tone would be a perfect fit. He might be your best first client.",
+    painPoints: ["Weekend hours only until 3PM — missing all Sunday evening emergency calls", "Owner personally involved in most calls and service decisions", "Eco/tech-forward brand already (EV fleet) — likely receptive to AI", "Growing reputation via Reddit/community = increasing call volume with small team"],
+    questions: [
+      "Mitchell, with your commitment to customer service, what happens when someone's AC dies at 7 PM on a Sunday and they call Super Cool?",
+      "As the business grows from your Reddit reputation, are you feeling the phone volume increasing?",
+      "You're clearly tech-forward with the EV fleet — have you looked into AI for call handling?",
+      "Who's answering calls when you and the team are on installs during the day?",
+      "What would it mean for your weekends if every call was answered and booked automatically?"
+    ],
+    opener: "Hey Mitchell — I've seen your work on the Charlotte subreddit and the EV fleet is impressive. Quick thought: you clearly care about every customer interaction, but Super Cool closes at 3 PM on weekends. What happens when someone's AC dies at 6 PM on a Saturday in July? I help HVAC companies make sure that call still gets the Super Cool treatment — 24/7 — without you hiring anyone."
+  },
+  {
+    name: "HMO Pest Control",
+    industry: "pest",
+    priority: "a",
+    owner: "Kerry Norton",
+    phone: "(704) 893-1100",
+    altPhone: "(980) 313-2625",
+    website: "hmo-pestcontrol.com",
+    address: "1409 East Blvd, Your Market 28203",
+    rating: 5.0,
+    reviews: 166,
+    hours: "6AM–11PM daily",
+    founded: "~2002 (22+ years in business)",
+    teamSize: "Very small — Kerry + Ray + small crew. Also runs HMO Handyman, HMO Home Inspections, HMO Moving",
+    services: "Bed bugs, termites, roaches, ants, spiders, rodents, commercial pest control, home inspections",
+    crm: "Likely manual — one review specifically complained about lack of automated reminders/scheduling",
+    socialPresence: "LinkedIn presence for Kerry, minimal social media for pest control brand",
+    rundown: "Kerry Norton is a veteran operator who's been in business since 2002, originally as a licensed General Contractor before pivoting to home inspections and pest control. He runs FOUR businesses under the HMO brand (Pest Control, Home Inspections, Handyman, Moving) — meaning he is spread extremely thin. The company runs 6AM to 11PM daily, which suggests Kerry or his small team are answering calls for nearly 17 hours a day. Reviews praise the quality but one review specifically called out the lack of automated reminders and scheduling, saying they left for 'a company with automation.' This is a HUGE signal — their operational systems are manual and costing them customers. Kerry is the kind of hands-on owner who needs automation to scale but probably hasn't found the right solution. An AI receptionist + automated follow-ups would directly solve problems he's actively losing customers over.",
+    painPoints: ["Runs 4 businesses simultaneously — massively spread thin", "One review explicitly left because of lack of automated scheduling/reminders", "17-hour daily phone coverage = someone is exhausted", "Still gaps after 11PM for true emergencies", "Manual operations losing customers who want modern scheduling"],
+    questions: [
+      "Kerry, running four businesses is incredible — how are you managing all the phone calls across HMO Pest Control, Inspections, Handyman, and Moving?",
+      "I noticed a customer mentioned leaving because they didn't get automated reminders — is scheduling and follow-up something you've been trying to solve?",
+      "With 6AM to 11PM hours, who's answering the phone? Is that you personally?",
+      "What happens to calls that come in after 11 PM — especially for urgent pest issues?",
+      "If I could set up a system that answers every call, books appointments, and sends automatic reminders — without you changing anything about how you work — would that be interesting?"
+    ],
+    opener: "Hey Kerry — I know you're running four businesses under the HMO brand, so I'll keep this quick. I help pest control companies in Charlotte make sure every call gets answered and every appointment gets confirmed automatically. No more missed calls, no more customers slipping through because of manual scheduling. Would 10 minutes be worth your time to see how it works?"
+  },
+  {
+    name: "E.R. Services",
+    industry: "plumbing",
+    priority: "a",
+    owner: "Unknown — research needed",
+    phone: "(980) 890-4600",
+    altPhone: "",
+    website: "erplumbing.com",
+    address: "11345 Allen Station Dr, Mint Hill, NC 28227",
+    rating: 4.9,
+    reviews: 4694,
+    hours: "Mon–Fri 8AM–4PM, Closed weekends",
+    founded: "Established local company",
+    teamSize: "Medium-Large — multiple techs (Jake, Nick, Jon, Benjamin, JD mentioned)",
+    services: "Emergency plumbing, leak repair, pipe repair, commercial plumbing",
+    crm: "Unknown",
+    socialPresence: "Minimal — primary presence is Google reviews",
+    rundown: "A company literally named 'E.R. Services' (Emergency Repair) that closes at 4 PM and is completely shut down on weekends. That's a massive brand-promise gap. They have nearly 5,000 Google reviews at 4.9 stars — indicating very high call volume and a strong reputation. Multiple technician names appear in reviews (Jake, Nick, Jon, Benjamin, JD), suggesting a medium-sized operation. Reviews mention quick response times and Saturday night service from JD, which contradicts their listed hours — suggesting they may take emergency calls informally but don't have a system for it. This is a high-volume operation with the budget to pay for AI and a clear operational gap that's costing them revenue every single evening and weekend.",
+    painPoints: ["Brand is literally 'Emergency Repair' but closes at 4PM weekdays, closed weekends", "4,700 reviews = high volume but limited hours = massive missed call problem", "No formal after-hours system despite informal emergency responses", "Multiple techs suggest enough revenue to easily afford AI solution"],
+    questions: [
+      "With a name like E.R. Services, I imagine a lot of customers expect 24/7 availability — what happens to calls after 4 PM?",
+      "At nearly 5,000 reviews, your call volume must be significant. Do you have any idea how many calls go unanswered on evenings and weekends?",
+      "Is there someone informally taking emergency calls after hours, or does everything go to voicemail?",
+      "Have you considered expanding your hours without actually adding staff?",
+      "What if every call — 24/7 — got the E.R. treatment, automatically?"
+    ],
+    opener: "Hey, quick question — your company is literally called E.R. Services, but your Google listing shows you close at 4 PM and you're closed weekends. How many emergency calls do you think are going to your competitors after hours? Because I help plumbing companies capture every single one of those calls with AI — no extra staff, no night shifts."
+  },
+  {
+    name: "Charlotte Plumbing",
+    industry: "plumbing",
+    priority: "a",
+    owner: "Unknown — research needed",
+    phone: "(704) 684-4664",
+    altPhone: "",
+    website: "Unknown",
+    address: "8124 Statesville Rd, Your Market 28269",
+    rating: 4.9,
+    reviews: 1277,
+    hours: "Open 24 hours, 7 days",
+    founded: "Established local company",
+    teamSize: "Medium — Stephan, Richard, Greg mentioned frequently in reviews",
+    services: "Emergency plumbing, toilet repair, water heater, pipe repair, drain cleaning",
+    crm: "Unknown",
+    socialPresence: "Minimal",
+    rundown: "This company runs true 24/7 operations with 1,277 reviews at 4.9 stars. Techs like Stephan and Richard are mentioned by name repeatedly, suggesting a loyal, small-to-medium team. The 24/7 model means someone is answering calls at all hours — which means either the owner is burning out or they have a basic answering service. Reviews mention after-hours visits and same-day service. The pitch here isn't about missing calls — it's about burnout, consistency, and scaling. An AI agent handles the 2 AM calls so the owner can sleep, while ensuring every caller gets the same quality experience whether they call at noon or midnight.",
+    painPoints: ["24/7 operation = someone is answering the phone at 3 AM (likely the owner)", "Burnout risk from constant availability", "Quality consistency — tired humans answer differently at 2 AM vs 2 PM", "Scaling problem: more calls = more interruptions for the person answering"],
+    questions: [
+      "Running 24/7 is impressive — but honestly, who's picking up the phone at 2 AM?",
+      "How's that schedule working for your quality of life?",
+      "Have you ever missed a call just because you were too deep in sleep at 3 AM?",
+      "What if AI handled every overnight and weekend call, and you just woke up to a list of booked appointments?",
+      "Would it be worth a 10-minute look at something that could give you your nights back?"
+    ],
+    opener: "Hey, I know you guys run 24/7 — which is rare and impressive. But here's what I wonder: who's actually answering the phone at 2 AM? Because I help plumbing companies keep that 24/7 promise without anyone losing sleep. The AI answers, qualifies, and books the job. You wake up to a full calendar."
+  },
+  {
+    name: "Adams Heating & Air",
+    industry: "hvac",
+    priority: "a",
+    owner: "Family-owned (45+ years, Adams family)",
+    phone: "(704) 376-4328",
+    altPhone: "",
+    website: "adamshvac.com",
+    address: "600 Morris St, Your Market 28202",
+    rating: 4.8,
+    reviews: 261,
+    hours: "7:30AM–9PM daily",
+    founded: "~1980 (45+ years in business)",
+    teamSize: "Small-Medium — Jim (Comfort Specialist), Adrian, Marcus, Juan, Jeremy, Nelson & Nelson (installers)",
+    services: "HVAC install, repair, maintenance, gas lines, system upgrades, Trane dealer",
+    crm: "Unknown — longstanding operation suggests established but possibly legacy systems",
+    socialPresence: "Minimal digital presence for a 45-year-old company",
+    rundown: "Adams is a multi-generational family HVAC business that's been serving Charlotte for 45+ years. Reviews mention specific employees across sales (Jim), installation (Adrian, Marcus, Juan, Jeremy), and service — indicating an organized operation with dedicated roles. They close at 9 PM, which is better than most, but still leaves the late-night gap. With only 261 reviews despite 45 years, they likely rely heavily on word-of-mouth and repeat business rather than digital marketing. Their loyal customer base ('we've used Adams for 45 years') is a strength but also means they may be losing new customers who find them on Google after 9 PM and get voicemail. The pitch is about honoring their legacy of personal service by extending it to 24/7 — AI that feels as personal as the Adams family touch.",
+    painPoints: ["Closes at 9PM — missing late-night HVAC emergencies", "Low review count (261) for 45 years suggests reliance on word-of-mouth, not digital", "Legacy business may have legacy systems — could benefit from modern automation", "New customers finding them on Google after 9 PM are going to competitors"],
+    questions: [
+      "With 45 years of reputation, what happens when a new customer finds you on Google at 10 PM with a broken furnace?",
+      "Your team clearly delivers personal service — would you be open to extending that feel to after-hours with AI that matches your tone?",
+      "How are you currently managing leads and scheduling — is there a CRM in place?",
+      "Have you noticed more customers coming through Google vs. referrals these days?",
+      "What would it mean to capture every after-9-PM call without changing how your team works during the day?"
+    ],
+    opener: "Hey, I can tell Adams has been a cornerstone of Charlotte HVAC for over 40 years — that kind of reputation is rare. Quick question: when a new customer finds you on Google at 10 PM with no heat, what happens? Because I help family HVAC businesses extend that personal touch to 24/7 with AI — without changing anything about how your team works."
+  },
+  {
+    name: "Charlotte Heating & Air",
+    industry: "hvac",
+    priority: "a",
+    owner: "Unknown — locally owned, small team (Mary in office, techs: Zo, Martin, Brian B)",
+    phone: "(704) 330-3177",
+    altPhone: "",
+    website: "Unknown",
+    address: "8621 Fairview Rd B, Mint Hill, NC 28227",
+    rating: 5.0,
+    reviews: 983,
+    hours: "24 hours Mon–Sat, Closed Sunday",
+    founded: "~2019+ (customer mentions unit installed in 2019)",
+    teamSize: "Small — Mary (office), Zo, Martin, Brian B (techs)",
+    services: "HVAC install, repair, maintenance, mini-splits",
+    crm: "Unknown",
+    socialPresence: "Minimal",
+    rundown: "A perfect 5.0 rating with nearly 1,000 reviews — that's incredibly rare and signals exceptional service culture. They run 24 hours Monday through Saturday but are closed Sundays. Reviews mention Mary in the office and techs by name (Zo, Martin, Brian B) — it's a small, tight team where every person is known by name. One review mentions a customer getting a tech within an hour when their AC unit acted up. The Sunday closure is the clear gap — HVAC emergencies don't take Sundays off, especially in Charlotte summers. The pitch is simple: AI covers Sunday and gives Mary backup during peak call times.",
+    painPoints: ["Perfect 5.0 rating to protect — every missed call risks the brand", "Closed Sundays = gap on a day when residential emergencies peak", "Small office team (Mary) = limited call handling capacity during peaks", "24-hour coverage Mon-Sat means someone is exhausted by Sunday"],
+    questions: [
+      "A perfect 5-star rating with almost 1,000 reviews — how do you maintain that level of service?",
+      "What happens on Sundays when someone's system goes down?",
+      "How is Mary handling call volume during peak days? Does she ever get overwhelmed?",
+      "If AI could handle overflow calls and all Sunday coverage, would that help protect your 5-star experience?",
+      "What's your biggest operational headache right now?"
+    ],
+    opener: "Hey, a perfect 5-star rating with almost 1,000 reviews is unheard of — you should be proud of that. My question is: what happens when someone's AC dies on a Sunday? Because I help HVAC companies make sure that 5-star experience happens every single day — including the day you're closed."
+  },
+  {
+    name: "Economy Exterminators",
+    industry: "pest",
+    priority: "a",
+    owner: "Unknown — established local operation (Kylie, Kimberly in customer service mentioned)",
+    phone: "(704) 420-7502",
+    altPhone: "",
+    website: "economyexterminators.com",
+    address: "10345 Nations Ford Rd E, Your Market 28273",
+    rating: 4.9,
+    reviews: 1617,
+    hours: "Mon–Fri 7AM–5PM, Sat 7AM–12PM, Closed Sunday",
+    founded: "Established company",
+    teamSize: "Medium — dedicated customer service team (Kylie, Kimberly, Kim mentioned), field techs (Jacob, etc.)",
+    services: "General pest control, termite, bed bugs, recurring service plans",
+    crm: "Has scheduling system — reviews mention account management and service plans",
+    socialPresence: "Yelp presence, Google reviews",
+    rundown: "Economy Exterminators has 1,600+ reviews and a dedicated customer service team (Kylie, Kimberly, Kim mentioned by name in reviews). This signals an organized operation with office staff handling calls during business hours. However, they close at 5 PM weekdays and noon on Saturday, with Sunday completely off. Pest emergencies (finding roaches, termite damage, bed bug discovery) overwhelmingly happen in evenings and weekends when people are actually home. Reviews praise the customer service team specifically — they have a culture of good phone interactions. The AI pitch here is about extending that great phone experience to the 128 hours per week they're currently closed. They already value customer service; AI is the tool that makes it 24/7.",
+    painPoints: ["Closes at 5PM weekdays, noon Saturday, closed Sunday — missing 128+ hours/week", "Pest discoveries peak in evenings/weekends when homeowners are actually home", "Good CS culture (Kylie, Kim praised) but only during business hours", "Recurring service model means every new customer is long-term revenue"],
+    questions: [
+      "Your customer service team is clearly a strength — Kylie and Kim get called out by name in reviews. What happens after 5 PM when that team goes home?",
+      "Most people discover pest problems in the evening when they're home — how many of those calls do you think you're missing?",
+      "With your recurring service model, every new customer is potentially years of revenue. What's the cost of losing one to voicemail?",
+      "What if your after-hours callers got the same Kylie-quality experience at 9 PM that they get at 9 AM?",
+      "Would it be worth 10 minutes to see how AI can extend your customer service team to 24/7?"
+    ],
+    opener: "Hey, I read your reviews and your customer service team is clearly a differentiator — people call out Kylie and Kimberly by name. But here's the thing: you close at 5 PM. And most people discover roaches or termite damage in the evening when they're home. What if every after-hours caller got that same great experience? That's what I help pest control companies do."
+  },
+  // ═══ PRIORITY B ═══
+  {
+    name: "AAA City Plumbing",
+    industry: "plumbing",
+    priority: "b",
+    owner: "Unknown — office staff: Parrish (reception), techs: Frankie, Shannon, Randy 'Red', Cory, Joseph, Jerry, James, Gary, Gina, Porscha",
+    phone: "(704) 544-1909",
+    altPhone: "",
+    website: "aaacityplumbing.com",
+    address: "227 W 4th St #312, Your Market 28202",
+    rating: 4.9,
+    reviews: 1349,
+    hours: "24 hours Mon–Sat, Closed Sunday",
+    founded: "Established",
+    teamSize: "Medium — multiple office + field staff mentioned in reviews",
+    services: "Emergency plumbing, water heater, leak repair, repiping, drain cleaning",
+    crm: "Unknown",
+    socialPresence: "Minimal",
+    rundown: "A solid medium-sized operation with 1,349 reviews and a large team. Parrish handles reception, multiple techs handle field work. Closed Sundays is the gap. Reviews praise the after-service follow-up and communication. An AI agent handles Sunday calls and overflow during peak weekday hours.",
+    painPoints: ["Closed Sundays — emergency plumbing gap", "Large enough team to have budget for AI", "Good communication culture to build on"],
+    questions: ["What happens to Sunday calls?", "How does Parrish handle overflow when multiple calls come in?", "Have you looked at any technology to help with after-hours?"],
+    opener: "Hey, with 1,300+ reviews you guys clearly run a tight operation. Quick question: what happens to calls on Sundays when you're closed? I help plumbing companies capture those without adding any staff."
+  },
+  {
+    name: "Sage Pest Control",
+    industry: "pest",
+    priority: "b",
+    owner: "Unknown — innovative marketing team (sends hats + test kits to prospects)",
+    phone: "(980) 319-1943",
+    altPhone: "",
+    website: "sagepest.com",
+    address: "4221 Joe St Unit B, Your Market 28206",
+    rating: 4.8,
+    reviews: 1746,
+    hours: "Mon–Fri 9AM–5PM, Closed weekends",
+    founded: "Established local brand",
+    teamSize: "Medium — Stuart, Kweisi, other techs mentioned",
+    services: "General pest control, recurring service, crawlspace work, vapor barriers",
+    crm: "Has scheduling system for recurring services",
+    socialPresence: "Creative marketing (mails hats and bug test kits to potential customers)",
+    rundown: "Sage stands out for creative marketing — they mail branded hats and pest test kits to potential customers. This tells you they're innovative and willing to try new things. But they're only open 9-5 weekdays with zero weekend coverage. For pest control, that's a huge miss. They have 1,746 reviews and a clear focus on recurring service plans. Every missed call from a new customer is potentially years of quarterly service revenue lost.",
+    painPoints: ["9-5 only, no weekends = massive coverage gap", "Creative marketing mindset = likely open to AI", "Recurring revenue model means huge lifetime value per customer lost"],
+    questions: ["Your marketing is really creative — the hat and test kit approach is genius. But what happens when those leads call on a Saturday?", "With recurring service plans, what's a new customer worth to you over 2-3 years?", "Would extending your phone coverage to 24/7 change your growth trajectory?"],
+    opener: "Hey, I love the test kit and hat marketing — that's genuinely creative. Quick thought: you're investing in getting people to call you, but you're closed evenings and weekends. What if every one of those leads got answered the moment they picked up the phone?"
+  },
+  {
+    name: "Noosa Pest Management",
+    industry: "pest",
+    priority: "b",
+    owner: "Unknown",
+    phone: "(704) 499-9922",
+    altPhone: "",
+    website: "noosapest.com",
+    address: "6916 Rea Croft Dr, Your Market 28226",
+    rating: 5.0,
+    reviews: 2166,
+    hours: "Mon–Fri 8AM–5PM, Closed weekends",
+    founded: "Established",
+    teamSize: "Medium — Ethan, Matt, Lane mentioned as techs",
+    services: "General pest control, crawlspace vapor barriers, recurring maintenance",
+    crm: "Has scheduling system for recurring services",
+    socialPresence: "Minimal",
+    rundown: "Another perfect 5.0 rating — this time with over 2,100 reviews. That's extraordinary. But they're only open 8-5 weekdays with zero weekend coverage. They clearly deliver exceptional service during business hours. The gap is enormous: evenings and weekends represent the majority of when homeowners discover pest problems. Every missed call threatens that perfect rating because frustrated callers who reach voicemail go to competitors and never become the 5-star reviewers Noosa clearly earns.",
+    painPoints: ["Perfect 5.0 with 2,100+ reviews — brand to protect", "Only open 8-5 weekdays = missing 73% of the week", "Every missed new customer is years of lost recurring revenue"],
+    questions: ["How did you build a perfect 5-star reputation? That's incredibly rare.", "With that standard, what happens when someone calls at 6 PM and gets voicemail?", "How many new customers per month do you estimate you're losing to after-hours voicemail?"],
+    opener: "A perfect 5-star rating with over 2,100 reviews — that might be the best I've ever seen in pest control. My question: how many potential 5-star customers are calling after 5 PM and getting voicemail instead of the Noosa experience? Because I help companies like yours make sure that never happens."
+  },
+  {
+    name: "Ross & Witmer HVAC",
+    industry: "hvac",
+    priority: "b",
+    owner: "Unknown — established local company",
+    phone: "(704) 610-1119",
+    altPhone: "",
+    website: "rossandwitmer.com",
+    address: "5100 Hovis Rd, Your Market 28208",
+    rating: 4.9,
+    reviews: 433,
+    hours: "Open 24 hours, 7 days",
+    founded: "Established (multi-year customer relationships mentioned)",
+    teamSize: "Medium — Michael, Jonathan, Caleb, Jeff, Bobby H. mentioned",
+    services: "HVAC repair, install, mini-splits, maintenance plans",
+    crm: "Has maintenance plan system",
+    socialPresence: "Minimal",
+    rundown: "Runs 24/7 like Charlotte Plumbing — meaning someone is covering overnight calls. Medium-sized team with maintenance plans suggesting organized operations. The AI pitch is about burnout prevention and call quality consistency. At 433 reviews with 4.9 stars, they're a quality-focused operation that would benefit from AI handling the late-night calls so their team can be fresh for daytime installs and repairs.",
+    painPoints: ["24/7 coverage = burnout risk for whoever is on call", "Medium team but overnight calls still disruptive", "Quality-focused brand needs consistent experience at all hours"],
+    questions: ["Who covers the overnight calls? Is it a rotation?", "How does overnight call duty affect your team's performance the next day?", "What if AI handled 10 PM to 7 AM so your team could actually rest?"],
+    opener: "Hey, running 24/7 is a commitment. Quick question: who's on call tonight at 2 AM? Because I help HVAC companies keep that 24/7 promise without burning out their team. AI handles the overnight calls, your people wake up rested."
+  },
+  {
+    name: "Triangle Pest Control",
+    industry: "pest",
+    priority: "b",
+    owner: "Unknown — regional operation",
+    phone: "(704) 389-2184",
+    altPhone: "",
+    website: "trianglepest.com",
+    address: "5104 Reagan Dr #10, Your Market 28206",
+    rating: 4.9,
+    reviews: 1266,
+    hours: "Mon–Fri 7:30AM–6PM, Sat 9AM–3PM, Closed Sunday",
+    founded: "Established regional brand",
+    teamSize: "Medium — Malik, Brandon, Ryan, Shane mentioned",
+    services: "General pest control, recurring quarterly service",
+    crm: "Has scheduling and recurring service management",
+    socialPresence: "Regional brand presence",
+    rundown: "A regional pest control brand with strong recurring service focus. Malik is mentioned repeatedly as a standout tech. Saturday hours until 3 PM and closed Sunday leaves gaps. At 1,266 reviews they're high-volume enough to justify AI investment. The recurring service model means every new customer acquired is years of quarterly revenue.",
+    painPoints: ["Closed Sunday, Saturday only until 3PM", "Recurring model = high lifetime customer value at risk", "Regional brand = budget and scale for AI"],
+    questions: ["With your recurring model, what's a customer worth over their lifetime?", "How many new customers do you think call on Sundays?", "What if every weekend call converted into a recurring account?"],
+    opener: "Hey, with your recurring service model, every new customer is potentially years of revenue. My question: how many of those potential long-term customers are calling on Sunday and getting voicemail? I help pest control companies make sure that number is zero."
+  },
+  {
+    name: "Swift Brothers Plumbing, Heating & Air",
+    industry: "plumbing",
+    priority: "b",
+    owner: "Unknown — Scott mentioned as project lead/estimator",
+    phone: "(704) 313-9855",
+    altPhone: "",
+    website: "swiftbrothers.com",
+    address: "5317 Marshall Air Dr, Your Market 28217",
+    rating: 4.9,
+    reviews: 551,
+    hours: "Open 24 hours, 7 days",
+    founded: "Established",
+    teamSize: "Medium — Scott, Raul, Destiny, Josh, Garth mentioned",
+    services: "Plumbing + HVAC, maintenance plans, emergency service",
+    crm: "Has maintenance plan system with reminders",
+    socialPresence: "Minimal",
+    rundown: "Multi-service company (plumbing + HVAC) running 24/7. This means their phone handles two different types of calls, and the after-hours person needs to route correctly. AI can intelligently triage whether a call is plumbing or HVAC, ask the right diagnostic questions for each, and route to the right team. The dual-service model makes AI even more valuable because it eliminates routing confusion.",
+    painPoints: ["Dual-service means complex call routing (plumbing vs HVAC)", "24/7 = overnight burnout", "Medium team with broad service range = stretched thin"],
+    questions: ["How do you handle routing between plumbing and HVAC calls after hours?", "Does the overnight person know both plumbing and HVAC intake questions?", "What if AI automatically asked the right questions based on the service type and routed accordingly?"],
+    opener: "Hey, running plumbing AND HVAC means your phone is basically handling two businesses. After hours, how do you make sure plumbing emergencies and HVAC calls get routed to the right team? I help multi-service companies automate that with AI."
+  }
+];
+
+function renderCards(filter) {
+  const container = document.getElementById('cardContainer');
+  let filtered = companies;
+  if (filter === 'plumbing' || filter === 'hvac' || filter === 'pest') {
+    filtered = companies.filter(c => c.industry === filter);
+  } else if (filter === 'a' || filter === 'b') {
+    filtered = companies.filter(c => c.priority === filter);
+  }
+
+  const aCount = filtered.filter(c => c.priority === 'a').length;
+  document.getElementById('countLabel').textContent = filter === 'all'
+    ? `${companies.filter(c=>c.priority==='a').length} Priority A targets`
+    : `${filtered.length} companies shown`;
+
+  container.innerHTML = filtered.map(c => `
+    <div class="card priority-${c.priority}" data-ind="${c.industry}" data-pri="${c.priority}">
+      <div class="card-top" onclick="this.parentElement.classList.toggle('open')">
+        <span class="card-priority">${c.priority.toUpperCase()}</span>
+        <div class="card-main">
+          <h2>${c.name} <span class="ind-tag ind-${c.industry}">${c.industry}</span></h2>
+          <div class="card-meta">
+            <span class="meta-item"><span class="star">★</span> <strong>${c.rating}</strong> (${c.reviews.toLocaleString()} reviews)</span>
+            <span class="meta-item">👤 <strong>${c.owner}</strong></span>
+            <span class="meta-item">🕐 ${c.hours}</span>
+          </div>
+        </div>
+        <div class="card-right">
+          <a class="call-btn" href="tel:${c.phone.replace(/\D/g,'')}" onclick="event.stopPropagation()">📞 ${c.phone}</a>
+          <span class="arrow">▾</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="body-grid">
+          <div class="body-section">
+            <h3>Company Intel</h3>
+            <div class="info-row"><span class="lbl">Owner/Contact</span><span class="val">${c.owner}</span></div>
+            <div class="info-row"><span class="lbl">Phone</span><span class="val">${c.phone}${c.altPhone ? ' / '+c.altPhone : ''}</span></div>
+            <div class="info-row"><span class="lbl">Website</span><span class="val">${c.website}</span></div>
+            <div class="info-row"><span class="lbl">Address</span><span class="val">${c.address}</span></div>
+            <div class="info-row"><span class="lbl">Founded</span><span class="val">${c.founded}</span></div>
+            <div class="info-row"><span class="lbl">Team Size</span><span class="val">${c.teamSize}</span></div>
+          </div>
+          <div class="body-section">
+            <h3>Operations</h3>
+            <div class="info-row"><span class="lbl">Hours</span><span class="val">${c.hours}</span></div>
+            <div class="info-row"><span class="lbl">Services</span><span class="val">${c.services}</span></div>
+            <div class="info-row"><span class="lbl">CRM/Tech</span><span class="val">${c.crm}</span></div>
+            <div class="info-row"><span class="lbl">Social</span><span class="val">${c.socialPresence}</span></div>
+          </div>
+          <div class="rundown">
+            <h3>Full Rundown</h3>
+            <p>${c.rundown}</p>
+          </div>
+          <div class="rundown" style="border-left:none">
+            <h3 style="color:var(--red)">Pain Points & What They Need</h3>
+            <p>${c.painPoints.map(p => '• ' + p).join('<br>')}</p>
+          </div>
+          <div class="questions-section">
+            <h3>Questions to Ask ${c.name.split(' ')[0]}</h3>
+            <div class="q-list">
+              ${c.questions.map((q,i) => `<div class="q-item"><span class="num">${i+1}.</span>${q}</div>`).join('')}
+            </div>
+          </div>
+          <div class="opener-section">
+            <h3>Your Opening Line</h3>
+            <div class="opener-box">
+              <button class="copy-btn" onclick="event.stopPropagation();navigator.clipboard.writeText(this.nextElementSibling.textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
+              <p>${c.opener}</p>
+            </div>
+          </div>
+        </div>
+        <div class="status-row">
+          <label>Status:</label>
+          <select class="status-select">
+            <option>Not contacted</option>
+            <option>Called — no answer</option>
+            <option>Left voicemail</option>
+            <option>Sent email</option>
+            <option>Booked demo</option>
+            <option>Sent proposal</option>
+            <option>Closed — client!</option>
+            <option>Not interested</option>
+            <option>Follow up later</option>
+          </select>
+          <label>Notes:</label>
+          <input class="notes-input" type="text" placeholder="Add notes about this prospect...">
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterCards(filter, btn) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards(filter);
+}
+
+renderCards('all');
+</script>
+</body>
+</html>

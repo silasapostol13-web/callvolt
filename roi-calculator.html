@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CallVolt AI — ROI Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c16;
+    --surface: #0f1629;
+    --surface2: #161d33;
+    --accent: #f97316;
+    --accent2: #0ea5e9;
+    --text: #e2e8f0;
+    --muted: #8892a8;
+    --border: #1e293b;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  .container { max-width: 820px; margin: 0 auto; }
+
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--accent);
+    background: rgba(249,115,22,0.1);
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .header h1 { font-size: 2rem; margin-bottom: 8px; }
+  .header h1 span { color: var(--accent); }
+  .header p { color: var(--muted); font-size: 0.95rem; }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+  @media (max-width: 700px) {
+    .calc-grid { grid-template-columns: 1fr; }
+  }
+
+  .inputs-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .inputs-panel h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+
+  .input-group {
+    margin-bottom: 22px;
+  }
+  .input-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .input-group .hint {
+    font-size: 0.72rem;
+    color: #5a6578;
+    margin-top: 4px;
+  }
+  .input-group input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface2);
+    outline: none;
+  }
+  .input-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(249,115,22,0.4);
+  }
+  .slider-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 70px;
+    text-align: right;
+  }
+
+  .select-wrap select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+    outline: none;
+  }
+  .select-wrap select:focus { border-color: var(--accent); }
+
+  /* Results */
+  .results-panel {
+    position: sticky;
+    top: 20px;
+  }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 16px;
+  }
+  .result-card h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    color: var(--muted);
+  }
+
+  .big-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .big-number.green { color: var(--green); }
+  .big-number.red { color: var(--red); }
+  .big-number.accent { color: var(--accent); }
+  .big-label { color: var(--muted); font-size: 0.82rem; margin-bottom: 24px; }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(30,41,59,0.6);
+    font-size: 0.88rem;
+  }
+  .stat-row:last-child { border: none; }
+  .stat-row .label { color: var(--muted); }
+  .stat-row .value { font-family: 'Space Mono', monospace; font-weight: 600; }
+  .stat-row .value.green { color: var(--green); }
+  .stat-row .value.red { color: var(--red); }
+
+  .roi-highlight {
+    background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(14,165,233,0.08));
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+  }
+  .roi-highlight h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .cta-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+    text-align: center;
+  }
+  .cta-note p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+  .cta-note strong { color: var(--accent); }
+
+  .company-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+  }
+  .company-input:focus { border-color: var(--accent); }
+  .company-input::placeholder { color: #4a5568; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="badge">Sales Tool</div>
+  <h1>What Are Missed Calls <span>Costing You?</span></h1>
+  <p>Adjust the sliders to match your business. See exactly how much revenue you're leaving on the table — and what CallVolt AI would recover.</p>
+</div>
+
+<div class="calc-grid">
+  <div class="inputs-panel">
+    <h3>Your Business</h3>
+
+    <div class="input-group">
+      <label>Company Name</label>
+      <input class="company-input" id="companyName" type="text" placeholder="e.g. ABC Plumbing" oninput="calculate()">
+    </div>
+
+    <div class="input-group select-wrap">
+      <label>Industry</label>
+      <select id="industry" onchange="setDefaults(); calculate();">
+        <option value="plumbing">Plumbing</option>
+        <option value="hvac">HVAC</option>
+        <option value="pest">Pest Control</option>
+        <option value="electrical">Electrical</option>
+        <option value="other">Other Trade Service</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>Total Inbound Calls per Month</label>
+      <div class="slider-row">
+        <input type="range" id="totalCalls" min="30" max="500" value="120" oninput="calculate()">
+        <span class="slider-val" id="totalCallsVal">120</span>
+      </div>
+      <div class="hint">All calls — answered + missed</div>
+    </div>
+
+    <div class="input-group">
+      <label>Estimated Missed Call %</label>
+      <div class="slider-row">
+        <input type="range" id="missedPct" min="5" max="60" value="25" oninput="calculate()">
+        <span class="slider-val" id="missedPctVal">25%</span>
+      </div>
+      <div class="hint">Industry average: 20-35% for small shops</div>
+    </div>
+
+    <div class="input-group">
+      <label>Average Job Value ($)</label>
+      <div class="slider-row">
+        <input type="range" id="avgJob" min="50" max="1000" step="10" value="200" oninput="calculate()">
+        <span class="slider-val" id="avgJobVal">$200</span>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Booking Rate on Answered Calls (%)</label>
+      <div class="slider-row">
+        <input type="range" id="bookRate" min="20" max="80" value="50" oninput="calculate()">
+        <span class="slider-val" id="bookRateVal">50%</span>
+      </div>
+      <div class="hint">What % of answered calls turn into a booked job?</div>
+    </div>
+
+    <div class="input-group">
+      <label>CallVolt AI Monthly Cost ($)</label>
+      <div class="slider-row">
+        <input type="range" id="aiCost" min="200" max="1500" step="50" value="497" oninput="calculate()">
+        <span class="slider-val" id="aiCostVal">$497</span>
+      </div>
+      <div class="hint">Your proposed monthly retainer</div>
+    </div>
+  </div>
+
+  <div class="results-panel">
+    <div class="result-card">
+      <h3>Monthly Revenue Lost</h3>
+      <div class="big-number red" id="revLost">$6,000</div>
+      <div class="big-label">Walking to competitors every month</div>
+      <div class="stat-row">
+        <span class="label">Missed calls/month</span>
+        <span class="value" id="missedCalls">30</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Jobs lost from missed calls</span>
+        <span class="value red" id="jobsLost">15</span>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <h3>With CallVolt AI</h3>
+      <div class="big-number green" id="revRecovered">$5,100</div>
+      <div class="big-label">Revenue recovered per month</div>
+      <div class="stat-row">
+        <span class="label">Calls captured by AI</span>
+        <span class="value green" id="callsCaptured">26</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Additional jobs booked</span>
+        <span class="value green" id="addlJobs">13</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">CallVolt AI cost</span>
+        <span class="value" id="costDisplay">-$497</span>
+      </div>
+    </div>
+
+    <div class="roi-highlight">
+      <h3>Net Monthly ROI</h3>
+      <div class="big-number accent" id="netROI">$4,603</div>
+      <div class="big-label" id="roiMultiple" style="margin-bottom:0">9.3x return on investment</div>
+    </div>
+
+    <div class="result-card" style="margin-top: 16px;">
+      <h3>12-Month Impact</h3>
+      <div class="stat-row">
+        <span class="label">Annual revenue recovered</span>
+        <span class="value green" id="annualRev">$61,200</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Annual OpenClaw cost</span>
+        <span class="value" id="annualCost">-$5,964</span>
+      </div>
+      <div class="stat-row">
+        <span class="label">Net annual profit from AI</span>
+        <span class="value green" id="annualProfit">$55,236</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cta-note">
+  <p>These numbers are conservative — they don't include the value of Google reviews from new customers, referrals from better service, or the owner's time saved. <strong>Ready to see it in action? Let's talk.</strong></p>
+</div>
+
+</div>
+
+<script>
+const defaults = {
+  plumbing:    { calls: 120, missed: 25, job: 200, book: 50 },
+  hvac:        { calls: 150, missed: 30, job: 350, book: 45 },
+  pest:        { calls: 100, missed: 20, job: 180, book: 55 },
+  electrical:  { calls: 100, missed: 25, job: 250, book: 50 },
+  other:       { calls: 100, missed: 25, job: 200, book: 50 }
+};
+
+function setDefaults() {
+  const d = defaults[document.getElementById('industry').value];
+  document.getElementById('totalCalls').value = d.calls;
+  document.getElementById('missedPct').value = d.missed;
+  document.getElementById('avgJob').value = d.job;
+  document.getElementById('bookRate').value = d.book;
+}
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function calculate() {
+  const totalCalls = +document.getElementById('totalCalls').value;
+  const missedPct = +document.getElementById('missedPct').value;
+  const avgJob = +document.getElementById('avgJob').value;
+  const bookRate = +document.getElementById('bookRate').value;
+  const aiCost = +document.getElementById('aiCost').value;
+
+  // Update slider displays
+  document.getElementById('totalCallsVal').textContent = totalCalls;
+  document.getElementById('missedPctVal').textContent = missedPct + '%';
+  document.getElementById('avgJobVal').textContent = '$' + avgJob;
+  document.getElementById('bookRateVal').textContent = bookRate + '%';
+  document.getElementById('aiCostVal').textContent = '$' + aiCost;
+
+  // Calculations
+  const missedCalls = Math.round(totalCalls * missedPct / 100);
+  const jobsLost = Math.round(missedCalls * bookRate / 100);
+  const revLost = jobsLost * avgJob;
+
+  const aiCaptureRate = 0.85; // AI answers 85% of previously missed
+  const callsCaptured = Math.round(missedCalls * aiCaptureRate);
+  const addlJobs = Math.round(callsCaptured * bookRate / 100);
+  const revRecovered = addlJobs * avgJob;
+  const netROI = revRecovered - aiCost;
+  const roiX = (revRecovered / aiCost).toFixed(1);
+
+  // Update results
+  document.getElementById('revLost').textContent = fmt(revLost);
+  document.getElementById('missedCalls').textContent = missedCalls;
+  document.getElementById('jobsLost').textContent = jobsLost;
+  document.getElementById('revRecovered').textContent = fmt(revRecovered);
+  document.getElementById('callsCaptured').textContent = callsCaptured;
+  document.getElementById('addlJobs').textContent = addlJobs;
+  document.getElementById('costDisplay').textContent = '-' + fmt(aiCost);
+  document.getElementById('netROI').textContent = fmt(netROI);
+  document.getElementById('roiMultiple').textContent = roiX + 'x return on investment';
+  document.getElementById('annualRev').textContent = fmt(revRecovered * 12);
+  document.getElementById('annualCost').textContent = '-' + fmt(aiCost * 12);
+  document.getElementById('annualProfit').textContent = fmt(netROI * 12);
+}
+
+calculate();
+</script>
+</body>
+</html>

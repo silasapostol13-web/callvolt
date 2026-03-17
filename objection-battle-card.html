@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CallVolt AI — Objection Battle Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf8;--surface:#fff;--s2:#fdf8f5;--dark:#1a1a1a;--muted:#6b6560;--border:#e8e4e0;--accent:#f97316;--accent-light:#fff3e8;--accent-dark:#ea6c0a;--green:#16a34a;--green-light:#f0fdf4;--blue:#2563eb;--blue-light:#eff6ff;--red:#dc2626;--red-light:#fef2f2;--yellow:#d97706;--yellow-light:#fffbeb}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--dark)}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:10}
+.brand{font-weight:800;font-size:0.95rem}.brand span{color:var(--accent)}
+.back{font-size:0.8rem;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:4px}.back:hover{color:var(--accent)}
+.hero{padding:40px 32px 28px;border-bottom:1px solid var(--border)}
+.hero-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.hero h1{font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px}
+.hero p{color:var(--muted);font-size:0.88rem;line-height:1.5}
+.controls{padding:18px 32px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search{flex:1;min-width:200px}
+.search input{width:100%;padding:10px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--dark);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s}
+.search input:focus{border-color:var(--accent)}
+.search input::placeholder{color:#bbb}
+.legend{display:flex;gap:14px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:0.75rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:2px}
+.wrap{max-width:800px;margin:0 auto;padding:20px 32px 80px}
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;transition:border-color 0.2s}
+.card:hover{border-color:rgba(249,115,22,0.25)}
+.card-head{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer}
+.card.open .card-head{border-bottom:1px solid var(--border)}
+.sev{width:3px;height:34px;border-radius:2px;flex-shrink:0}
+.sev.high{background:var(--red)}.sev.med{background:var(--yellow)}.sev.low{background:var(--blue)}
+.otext{flex:1}
+.otext h3{font-size:0.88rem;font-weight:700;margin-bottom:2px;line-height:1.4}
+.freq{font-family:'DM Mono',monospace;font-size:0.63rem;padding:2px 8px;border-radius:5px;background:var(--s2);color:var(--muted);white-space:nowrap}
+.arr{color:var(--muted);transition:transform 0.25s;font-size:0.85rem;flex-shrink:0}
+.card.open .arr{transform:rotate(180deg)}
+.body{display:none;padding:16px 20px 20px 28px}
+.card.open .body{display:block}
+.rb{margin-bottom:14px}
+.rb-label{font-family:'DM Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.rb-label.l-u{color:var(--yellow)}.rb-label.l-r{color:var(--accent)}.rb-label.l-c{color:var(--green)}.rb-label.l-n{color:var(--red)}
+.rb-label::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.script{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:12px 16px;font-size:0.84rem;line-height:1.7;color:var(--dark)}
+.script.u{border-left:3px solid var(--yellow)}.script.r{border-left:3px solid var(--accent)}.script.c{border-left:3px solid var(--green)}
+.tip{background:var(--accent-light);border:1px solid rgba(249,115,22,0.15);border-radius:8px;padding:10px 14px;font-size:0.8rem;line-height:1.6;color:#7c3411;margin-top:10px}
+.never{background:var(--red-light);border:1px solid rgba(220,38,38,0.15);border-radius:8px;padding:10px 14px;font-size:0.8rem;line-height:1.6;color:#7f1d1d;margin-top:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span>Call</span>Volt AI</div>
+  <div style="width:1px;height:20px;background:var(--border)"></div>
+  <a class="back" href="index.html">← Back to Toolkit</a>
+</div>
+<div class="hero">
+  <div class="hero-tag">Sales System · Demo Call</div>
+  <h1>Objection Battle Card</h1>
+  <p>Keep this open on your phone during every sales call. Search the objection, use the response. Know the red ones cold before you make your first call.</p>
+</div>
+<div class="controls">
+  <div class="search"><input type="text" id="srch" placeholder='Search... try "price", "robot", "contract"' oninput="filter()"></div>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:var(--red)"></div>Must know cold</div>
+    <div class="leg"><div class="dot" style="background:var(--yellow)"></div>Review before calls</div>
+    <div class="leg"><div class="dot" style="background:var(--blue)"></div>Less common</div>
+  </div>
+</div>
+
+<div class="wrap" id="cards">
+
+<div class="card" data-t="price cost expensive budget money afford cheap">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev high"></div>
+    <div class="otext"><h3>"That's too expensive" / "I can't afford that"</h3></div>
+    <span class="freq">Most Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Acknowledge</div>
+    <div class="script u">"Fair reaction — before I respond, quick question: how many calls do you think you miss per month? Even a rough guess."</div></div>
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"So if you're missing even 15 calls a month, and half would've been jobs at your average ticket... that's real revenue walking to competitors every month. The AI costs a fraction of that. You're not spending — you're recovering money you're already losing."</div></div>
+    <div class="rb"><div class="rb-label l-c">Close</div>
+    <div class="script c">"Let me pull up the ROI calculator right now and run your actual numbers. If the math doesn't work, I'll tell you that honestly. Sound fair?"</div></div>
+    <div class="tip"><strong>Always reframe cost → ROI.</strong> Never defend the price. Make them do the math on missed calls. Pull up the ROI calculator on your screen while you say this.</div>
+  </div>
+</div>
+
+<div class="card" data-t="robot robotic sound fake artificial customers hate">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev high"></div>
+    <div class="otext"><h3>"My customers will hate talking to a robot"</h3></div>
+    <span class="freq">Most Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Acknowledge</div>
+    <div class="script u">"That's the right concern to have — and honestly, if it sounded like a robot, I wouldn't sell it."</div></div>
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"Here's what I'd love to do — let me call a demo number right now and let you listen for 60 seconds. You decide. And keep in mind: your customers aren't comparing this to a perfect human receptionist. They're comparing it to voicemail. Voicemail loses 100% of the time."</div></div>
+    <div class="rb"><div class="rb-label l-c">Close</div>
+    <div class="script c">"60 second test — if it sounds robotic to you, I'll stop the pitch right here. Deal?"</div></div>
+    <div class="tip"><strong>The live demo kills this objection.</strong> Always be ready to call your demo line mid-conversation. Have it saved in your phone as "CallVolt Demo."</div>
+  </div>
+</div>
+
+<div class="card" data-t="already have receptionist answering service secretary staff">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev high"></div>
+    <div class="otext"><h3>"We already have a receptionist / answering service"</h3></div>
+    <span class="freq">Very Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Acknowledge</div>
+    <div class="script u">"Great — having someone handle calls is important. Quick question: what happens when they're on another call, on lunch, or after 5 PM?"</div></div>
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"This isn't about replacing them — it's about covering the gaps. The AI handles overflow, after-hours, weekends, holidays. It's the safety net that makes sure zero calls ever hit voicemail. Think of it as their backup, not their replacement."</div></div>
+    <div class="rb"><div class="rb-label l-c">Close</div>
+    <div class="script c">"What if we set it up just for after-hours and overflow to start? You keep your current setup during the day. Minimal change, maximum coverage."</div></div>
+    <div class="tip"><strong>For answering services:</strong> "How much are you paying per call? Our AI is typically 60–70% cheaper per interaction and never puts callers on hold."</div>
+  </div>
+</div>
+
+<div class="card" data-t="not interested not a good time later maybe">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev high"></div>
+    <div class="otext"><h3>"I'm not interested" / "Not a good time"</h3></div>
+    <span class="freq">Very Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-r">One gentle push</div>
+    <div class="script r">"Totally respect that. Before I let you go — is it that AI phone agents aren't something you'd consider, or is this just bad timing? I don't want to follow up if it's genuinely not a fit, but if it's just timing I'm happy to circle back."</div></div>
+    <div class="tip"><strong>Then honor whatever they say.</strong> Bad timing → ask what month. Not a fit → thank them and move on. Never argue. One push max.</div>
+  </div>
+</div>
+
+<div class="card" data-t="think about it consider need to discuss partner spouse">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev med"></div>
+    <div class="otext"><h3>"I need to think about it"</h3></div>
+    <span class="freq">Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Uncover the real objection</div>
+    <div class="script u">"Of course — this is a real decision. Just so I can send you the right info: is it more the cost, whether the AI will actually work for your business, or something else?"</div></div>
+    <div class="rb"><div class="rb-label l-c">Set a hard next step</div>
+    <div class="script c">"Let's do this — how about a 10-minute follow-up call on [specific day]? That way you've had time to think and I can answer anything that comes up. Does [day] at [time] work?"</div></div>
+    <div class="tip"><strong>"Think about it" = you haven't addressed the real objection.</strong> The question about cost/tech/results usually surfaces what's actually holding them back.</div>
+    <div class="never"><strong>Never say:</strong> "What's there to think about?" or any pressure tactic. Always leave the door open warmly and with a specific next step.</div>
+  </div>
+</div>
+
+<div class="card" data-t="too small one man solo owner operator just me">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev med"></div>
+    <div class="otext"><h3>"We're too small for this" / "It's just me"</h3></div>
+    <span class="freq">Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"Actually, you're exactly who this is built for. Big companies have call centers. You're the one answering your phone with your hands dirty while you're on a job. This is what lets you focus on the work and stop missing calls at the same time."</div></div>
+    <div class="rb"><div class="rb-label l-c">Close</div>
+    <div class="script c">"The ROI math actually works better for solo operators — every recovered call is pure profit with no overhead. Want me to show you what that looks like with your numbers?"</div></div>
+  </div>
+</div>
+
+<div class="card" data-t="dont trust AI technology scared tech not tech person">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev med"></div>
+    <div class="otext"><h3>"I don't trust AI" / "I'm not a tech person"</h3></div>
+    <span class="freq">Common</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Acknowledge</div>
+    <div class="script u">"Respect that — there's a lot of AI hype right now and it's hard to know what's real. You don't need to trust AI. You just need to hear it work for 60 seconds and decide if it sounds good enough."</div></div>
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"You don't need to understand how it works any more than you need to understand how your engine works to drive. We set it up, we manage it, you check your calendar and see booked jobs. That's it."</div></div>
+    <div class="tip"><strong>Focus on outcomes, never technology.</strong> "More jobs on your calendar" resonates. "AI-powered voice synthesis" does not.</div>
+  </div>
+</div>
+
+<div class="card" data-t="contract lock in cancel commitment term month">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev low"></div>
+    <div class="otext"><h3>"I don't want to be locked into a contract"</h3></div>
+    <span class="freq">Moderate</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-r">Response</div>
+    <div class="script r">"No contract — month to month. Cancel anytime with 30 days notice. The only thing you pay upfront is a one-time setup fee, because I actually build the system custom for your business. But the monthly? You own that decision every single month. We keep you because it works."</div></div>
+    <div class="tip">Usually the easiest objection. No contract + month-to-month = no risk. Pair with a first-month guarantee if they're still hesitant.</div>
+  </div>
+</div>
+
+<div class="card" data-t="hire receptionist employee staff part time person human">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev med"></div>
+    <div class="otext"><h3>"I'll just hire a receptionist instead"</h3></div>
+    <span class="freq">Moderate</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Acknowledge</div>
+    <div class="script u">"That's definitely an option. Have you looked at what that actually costs right now?"</div></div>
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"A part-time receptionist runs $15–18/hour — that's $2,400–$2,900/month for 40 hours a week. No nights, no weekends, no holidays. They call in sick. Take lunch. Quit. And you have to manage them. The AI costs a fraction of that, works 24/7/365, and requires zero management."</div></div>
+    <div class="rb"><div class="rb-label l-c">Close</div>
+    <div class="script c">"Why not start with AI now — live in a week — and hire when your volume demands it? The AI can handle overflow when you do hire someone."</div></div>
+    <div class="tip"><strong>Do the math out loud.</strong> $15/hr × 40hrs × 4wks = $2,400/mo minimum. No after-hours. No weekends. Payroll taxes on top of that. The comparison is stark.</div>
+  </div>
+</div>
+
+<div class="card" data-t="busy season timing slow later not right time wait">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev low"></div>
+    <div class="otext"><h3>"Maybe after busy season" / "Not the right time"</h3></div>
+    <span class="freq">Moderate</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"Busy season is actually when you need this most — that's when you're missing the most calls because you're slammed on jobs. Setting it up before the rush means you capture every call during your highest-revenue months. Setting it up after means you already missed them."</div></div>
+    <div class="rb"><div class="rb-label l-c">Close</div>
+    <div class="script c">"Setup takes less than a week and requires 30 minutes of your time max. If we start now, you're live before [upcoming peak]. Want to lock that in?"</div></div>
+    <div class="tip">Use their specific season: HVAC → summer AC calls. Pest → spring termite season. Plumbing → winter freeze. Roofing → storm season. Make the timing concrete.</div>
+  </div>
+</div>
+
+<div class="card" data-t="tried this before failed didnt work similar thing">
+  <div class="card-head" onclick="this.parentElement.classList.toggle('open')">
+    <div class="sev low"></div>
+    <div class="otext"><h3>"We tried something like this before and it didn't work"</h3></div>
+    <span class="freq">Occasional</span><span class="arr">▾</span>
+  </div>
+  <div class="body">
+    <div class="rb"><div class="rb-label l-u">Ask first</div>
+    <div class="script u">"Tell me about that — what did you try? Because there's a massive difference between old IVR phone-tree systems and what we build today."</div></div>
+    <div class="rb"><div class="rb-label l-r">Reframe</div>
+    <div class="script r">"The voice quality, the natural conversation handling, the direct calendar booking — none of that existed 3 years ago. I'd rather you call the demo and judge it yourself than take my word for it. 60 seconds."</div></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function filter(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  document.querySelectorAll('.card').forEach(c=>{
+    const t=(c.dataset.t+' '+c.querySelector('h3').textContent).toLowerCase();
+    c.classList.toggle('hidden',q.length>0&&!t.includes(q));
+  });
+}
+</script>
+</body>
+</html>

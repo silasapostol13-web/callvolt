@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Build Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f7f5;--surface:#fff;--surface2:#f0f0ed;--surface3:#e8e8e4;
+  --accent:#f97316;--accent-light:#fff3e8;--accent-dark:#ea6c0a;
+  --text:#1a1a1a;--muted:#6b7280;--border:#e2e2de;--dim:#9ca3af;
+  --dark:#111;--red:#dc2626;--blue:#0284c7;--gold:#d97706;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── NOTICE BAR ── */
+.notice{background:#fef3c7;border-bottom:1px solid #fcd34d;padding:10px 24px;text-align:center;font-size:0.8rem;color:#92400e;font-weight:500}
+.notice strong{color:#78350f}
+
+/* ── PROGRESS ── */
+.progress-strip{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px 12px}
+.progress-steps{display:flex;align-items:center;max-width:600px;margin:0 auto}
+.p-step{display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:500;color:var(--dim);transition:color 0.3s}
+.p-step.active{color:var(--accent-dark);font-weight:600}
+.p-step.done{color:var(--accent)}
+.p-step .num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;transition:all 0.3s;flex-shrink:0}
+.p-step.active .num{border-color:var(--accent);background:var(--accent);color:#fff}
+.p-step.done .num{border-color:var(--accent);color:var(--accent)}
+.p-conn{flex:1;height:2px;background:var(--border);margin:0 10px;min-width:12px}
+.p-conn.done{background:var(--accent);opacity:0.4}
+.prog-track{max-width:600px;margin:10px auto 0;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.4s ease;width:0%}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;align-items:center;padding:28px 24px 120px}
+.step-box{max-width:540px;width:100%}
+
+.step-header{margin-bottom:28px}
+.step-header .tag{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.step-header h2{font-size:1.5rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px;color:var(--dark)}
+.step-header p{font-size:0.9rem;color:var(--muted);line-height:1.5}
+
+/* Fields — HIGH CONTRAST */
+.field{margin-bottom:20px}
+.field label{display:block;font-size:0.85rem;font-weight:600;color:var(--dark);margin-bottom:6px}
+.field .hint{font-size:0.78rem;color:var(--muted);margin-bottom:6px;line-height:1.4}
+.field input,.field textarea{
+  width:100%;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:10px;color:var(--dark);font-family:'Sora',sans-serif;font-size:0.92rem;
+  outline:none;transition:all 0.2s;
+}
+.field input:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(249,115,22,0.12)}
+.field textarea{min-height:80px;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:#b0b5be}
+
+/* Option cards */
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{
+  padding:14px 18px;border:1.5px solid var(--border);border-radius:10px;
+  cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:12px;
+  background:var(--surface);
+}
+.opt:hover{border-color:var(--accent);background:var(--accent-light)}
+.opt.sel{border-color:var(--accent);background:var(--accent-light)}
+.opt-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.opt.sel .opt-dot{border-color:var(--accent);background:var(--accent)}
+.opt.sel .opt-dot::after{content:'';width:8px;height:8px;background:#fff;border-radius:50%}
+.opt-label{font-size:0.9rem;font-weight:500;color:var(--dark)}
+.opt-desc{font-size:0.78rem;color:var(--muted);margin-top:2px}
+
+/* Bottom nav */
+.bot-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(247,247,245,0.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:14px 24px;display:flex;justify-content:center;gap:12px}
+.bot-inner{max-width:540px;width:100%;display:flex;gap:12px}
+.b-back{padding:14px 24px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:500;cursor:pointer;transition:all 0.15s}
+.b-back:hover{color:var(--dark);border-color:var(--dark)}
+.b-next{flex:1;padding:14px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:'Sora',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.15s}
+.b-next:hover{background:var(--accent-dark)}
+.b-next:disabled{opacity:0.3;cursor:not-allowed}
+
+/* Steps */
+.step{display:none}
+.step.active{display:block;animation:fadeUp 0.25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Review summary */
+.rev-table{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.rev-row{display:flex;justify-content:space-between;padding:10px 16px;font-size:0.85rem;border-bottom:1px solid var(--border)}
+.rev-row:last-child{border:none}
+.rev-row:nth-child(even){background:var(--surface2)}
+.rev-row .rl{color:var(--muted)}
+.rev-row .rv{font-weight:600;text-align:right;max-width:55%}
+
+/* Generating */
+.gen-box{text-align:center;padding:40px 0}
+.ring{width:48px;height:48px;border:3px solid var(--accent);border-radius:50%;margin:0 auto;animation:pls 1.5s ease-out infinite}
+@keyframes pls{0%{transform:scale(0.85);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.gen-box h3{font-size:1rem;font-weight:600;color:var(--accent-dark);margin-top:20px}
+.gen-box .sub{font-size:0.85rem;color:var(--muted);margin-top:4px}
+.gi-list{margin-top:20px;text-align:left;display:inline-block}
+.gi{padding:7px 0;font-size:0.85rem;color:var(--dim);display:flex;align-items:center;gap:10px}
+.gi.done{color:var(--accent)}
+.gi.on{color:var(--dark);font-weight:500}
+.gi .ic{width:18px;text-align:center}
+
+/* ── OUTPUT VIEW ── */
+.out-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.ot{padding:10px 18px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Sora',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s}
+.ot:hover{color:var(--dark);border-color:var(--dark)}
+.ot.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+
+.os{display:none}
+.os.on{display:block}
+
+/* What to do with this box */
+.wtd{background:var(--accent-light);border:1px solid #a7f3d0;border-radius:10px;padding:16px 20px;margin-bottom:16px;font-size:0.85rem;line-height:1.6;color:var(--accent-dark)}
+.wtd strong{color:#ea6c0a}
+
+.ob{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ob-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.ob-head h3{font-size:0.88rem;font-weight:600;color:var(--dark)}
+.cp{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:0.7rem;cursor:pointer;transition:all 0.15s}
+.cp:hover{color:var(--accent);border-color:var(--accent)}
+.ob-body{padding:20px;font-size:0.87rem;line-height:1.8;white-space:pre-wrap;color:var(--text);max-height:500px;overflow-y:auto}
+
+.out-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.oa{padding:12px 24px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--dark);font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.15s}
+.oa:hover{border-color:var(--accent);color:var(--accent)}
+.oa.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+
+@media(max-width:600px){.p-step span:not(.num){display:none}}
+</style>
+</head>
+<body>
+
+<div class="notice">⚠️ <strong>Open this file in Chrome or Safari</strong> — not inside the Claude chat preview. The AI generation requires a real browser to work.</div>
+
+<div class="progress-strip">
+  <div class="progress-steps">
+    <div class="p-step active" id="ps1"><span class="num">1</span><span>Business</span></div><div class="p-conn" id="pc1"></div>
+    <div class="p-step" id="ps2"><span class="num">2</span><span>Services</span></div><div class="p-conn" id="pc2"></div>
+    <div class="p-step" id="ps3"><span class="num">3</span><span>Schedule</span></div><div class="p-conn" id="pc3"></div>
+    <div class="p-step" id="ps4"><span class="num">4</span><span>Calls</span></div><div class="p-conn" id="pc4"></div>
+    <div class="p-step" id="ps5"><span class="num">5</span><span>Numbers</span></div><div class="p-conn" id="pc5"></div>
+    <div class="p-step" id="ps6"><span class="num">6</span><span>Build!</span></div>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+</div>
+
+<div class="main"><div class="step-box">
+
+<!-- STEP 1 -->
+<div class="step active" id="s1">
+  <div class="step-header">
+    <div class="tag">Step 1 of 6</div>
+    <h2>Who is the client?</h2>
+    <p>Start with the basics. We'll use this to personalize everything the AI generates.</p>
+  </div>
+  <div class="field"><label>Business Name</label><input id="bizName" placeholder="ABC Plumbing Co."></div>
+  <div class="field"><label>Owner / Contact Name</label><input id="ownerName" placeholder="John Smith"></div>
+  <div class="field"><label>Phone Number</label><input id="bizPhone" placeholder="(704) 555-0123"></div>
+  <div class="field"><label>What industry?</label>
+    <div class="opts" data-key="industry">
+      <div class="opt" onclick="pick(this,'industry','plumbing')"><div class="opt-dot"></div><div><div class="opt-label">🔧 Plumbing</div></div></div>
+      <div class="opt" onclick="pick(this,'industry','hvac')"><div class="opt-dot"></div><div><div class="opt-label">❄️ HVAC</div></div></div>
+      <div class="opt" onclick="pick(this,'industry','pest')"><div class="opt-dot"></div><div><div class="opt-label">🐛 Pest Control</div></div></div>
+      <div class="opt" onclick="pick(this,'industry','electrical')"><div class="opt-dot"></div><div><div class="opt-label">⚡ Electrical</div></div></div>
+      <div class="opt" onclick="pick(this,'industry','other')"><div class="opt-dot"></div><div><div class="opt-label">🔨 Other</div></div></div>
+    </div>
+  </div>
+  <div class="field"><label>Service Area</label><input id="serviceArea" placeholder="Charlotte, Matthews, Mint Hill"></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step" id="s2">
+  <div class="step-header">
+    <div class="tag">Step 2 of 6</div>
+    <h2>What do they do?</h2>
+    <p>List their services and hours. The AI will reference this when talking to callers.</p>
+  </div>
+  <div class="field"><label>Services Offered</label><div class="hint">List every service they provide. More detail = smarter AI agent.</div><textarea id="services" placeholder="Emergency leak repair, drain cleaning, water heater install & replacement, whole house repiping, backflow testing, sewer line repair..."></textarea></div>
+  <div class="field"><label>Business Hours</label><div class="hint">When are they open? This determines when the AI covers for them.</div><textarea id="hours" placeholder="Mon-Fri 7AM-6PM&#10;Sat 8AM-2PM&#10;Closed Sunday" style="min-height:70px"></textarea></div>
+  <div class="field"><label>Do they offer emergency service?</label>
+    <div class="opts" data-key="emergency">
+      <div class="opt" onclick="pick(this,'emergency','24/7 emergency dispatch')"><div class="opt-dot"></div><div><div class="opt-label">Yes — 24/7 emergencies</div></div></div>
+      <div class="opt" onclick="pick(this,'emergency','same-day during hours')"><div class="opt-dot"></div><div><div class="opt-label">Yes — same-day during hours</div></div></div>
+      <div class="opt" onclick="pick(this,'emergency','appointment only')"><div class="opt-dot"></div><div><div class="opt-label">No — appointment only</div></div></div>
+    </div>
+  </div>
+  <div class="field"><label>Pricing Info</label><div class="hint">Dispatch fees, diagnostic fees, starting prices. AI uses this to give callers ballpark info.</div><textarea id="pricing" placeholder="$89 diagnostic fee (applied toward repair)&#10;Emergency dispatch: $129&#10;Drain cleaning starts at $150" style="min-height:70px"></textarea></div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step" id="s3">
+  <div class="step-header">
+    <div class="tag">Step 3 of 6</div>
+    <h2>How do they schedule?</h2>
+    <p>This tells us how the AI should book appointments and how big their team is.</p>
+  </div>
+  <div class="field"><label>What calendar / scheduling tool?</label>
+    <div class="opts" data-key="calendar">
+      <div class="opt" onclick="pick(this,'calendar','Google Calendar')"><div class="opt-dot"></div><div><div class="opt-label">Google Calendar</div></div></div>
+      <div class="opt" onclick="pick(this,'calendar','Housecall Pro')"><div class="opt-dot"></div><div><div class="opt-label">Housecall Pro</div></div></div>
+      <div class="opt" onclick="pick(this,'calendar','ServiceTitan')"><div class="opt-dot"></div><div><div class="opt-label">ServiceTitan</div></div></div>
+      <div class="opt" onclick="pick(this,'calendar','Jobber')"><div class="opt-dot"></div><div><div class="opt-label">Jobber</div></div></div>
+      <div class="opt" onclick="pick(this,'calendar','None / paper')"><div class="opt-dot"></div><div><div class="opt-label">None / paper-based</div></div></div>
+    </div>
+  </div>
+  <div class="field"><label>Team Size</label><input id="teamSize" placeholder="e.g. 3 trucks, 4 technicians"></div>
+  <div class="field"><label>How far out should the AI book?</label>
+    <div class="opts" data-key="bookWindow">
+      <div class="opt" onclick="pick(this,'bookWindow','same day / next available')"><div class="opt-dot"></div><div><div class="opt-label">Same day / next available</div></div></div>
+      <div class="opt" onclick="pick(this,'bookWindow','up to 1 week')"><div class="opt-dot"></div><div><div class="opt-label">Up to 1 week out</div></div></div>
+      <div class="opt" onclick="pick(this,'bookWindow','up to 2 weeks')"><div class="opt-dot"></div><div><div class="opt-label">Up to 2 weeks out</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step" id="s4">
+  <div class="step-header">
+    <div class="tag">Step 4 of 6</div>
+    <h2>How should the AI sound?</h2>
+    <p>This shapes the AI agent's personality when it answers the phone.</p>
+  </div>
+  <div class="field"><label>AI Agent Name</label><div class="hint">What name should it use? "Hi, this is ___ at ABC Plumbing."</div><input id="aiName" placeholder="Alex, Sam, Jordan (or leave blank for Alex)"></div>
+  <div class="field"><label>Personality</label>
+    <div class="opts" data-key="tone">
+      <div class="opt" onclick="pick(this,'tone','friendly and casual')"><div class="opt-dot"></div><div><div class="opt-label">Friendly & casual</div><div class="opt-desc">Like a helpful neighbor</div></div></div>
+      <div class="opt" onclick="pick(this,'tone','professional and warm')"><div class="opt-dot"></div><div><div class="opt-label">Professional & warm</div><div class="opt-desc">Polished but personable</div></div></div>
+      <div class="opt" onclick="pick(this,'tone','strictly professional')"><div class="opt-dot"></div><div><div class="opt-label">Strictly professional</div><div class="opt-desc">All business</div></div></div>
+    </div>
+  </div>
+  <div class="field"><label>What should the AI NOT do?</label><textarea id="restrictions" placeholder="Don't quote exact prices over the phone&#10;Don't schedule anything before 8 AM&#10;Always collect the caller's address"></textarea></div>
+  <div class="field"><label>Questions the AI should ask callers</label><textarea id="qualQs" placeholder="Is this residential or commercial?&#10;How old is the system/unit?&#10;Is water actively leaking right now?"></textarea></div>
+  <div class="field"><label>When should it alert the owner?</label><input id="alerts" placeholder="Emergency calls, large jobs, angry callers"></div>
+</div>
+
+<!-- STEP 5 -->
+<div class="step" id="s5">
+  <div class="step-header">
+    <div class="tag">Step 5 of 6</div>
+    <h2>The Numbers</h2>
+    <p>Estimates are fine — this builds the ROI report showing the client their return on investment.</p>
+  </div>
+  <div class="field"><label>About how many calls per month?</label><input id="monthlyCalls" placeholder="e.g. 120"></div>
+  <div class="field"><label>What % do they miss?</label><div class="hint">Industry average: 20-35% for small shops. Even 15% is common.</div><input id="missedPct" placeholder="e.g. 25"></div>
+  <div class="field"><label>Average job value ($)</label><input id="avgJob" placeholder="e.g. 250"></div>
+  <div class="field"><label>Who answers the phone right now?</label>
+    <div class="opts" data-key="whoAnswers">
+      <div class="opt" onclick="pick(this,'whoAnswers','the owner personally')"><div class="opt-dot"></div><div><div class="opt-label">The owner</div></div></div>
+      <div class="opt" onclick="pick(this,'whoAnswers','office staff / receptionist')"><div class="opt-dot"></div><div><div class="opt-label">Office staff</div></div></div>
+      <div class="opt" onclick="pick(this,'whoAnswers','answering service')"><div class="opt-dot"></div><div><div class="opt-label">Answering service</div></div></div>
+      <div class="opt" onclick="pick(this,'whoAnswers','voicemail')"><div class="opt-dot"></div><div><div class="opt-label">Voicemail</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 6: Review & Build -->
+<div class="step" id="s6">
+  <div class="step-header">
+    <div class="tag">Step 6 of 6</div>
+    <h2>Review & Build</h2>
+    <p>Double-check the info below. When you're ready, hit Build and AI generates 6 deliverables in about 60 seconds.</p>
+  </div>
+  <div id="revBox"></div>
+  <div id="genBox" style="display:none">
+    <div class="gen-box">
+      <div class="ring"></div>
+      <h3>Building your client package...</h3>
+      <p class="sub" id="genMsg">Starting generation...</p>
+      <div class="gi-list">
+        <div class="gi" id="g-agent"><span class="ic">○</span>AI Agent System Prompt</div>
+        <div class="gi" id="g-callflow"><span class="ic">○</span>Call Flow Logic</div>
+        <div class="gi" id="g-sms"><span class="ic">○</span>SMS Templates</div>
+        <div class="gi" id="g-ghl"><span class="ic">○</span>GoHighLevel Config</div>
+        <div class="gi" id="g-roi"><span class="ic">○</span>ROI Report</div>
+        <div class="gi" id="g-welcome"><span class="ic">○</span>Welcome Email</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 7: Results -->
+<div class="step" id="s7">
+  <div class="step-header">
+    <div class="tag">✓ Build Complete</div>
+    <h2>Your Client Package</h2>
+    <p>Everything you need to deploy this client's AI agent. Click each tab to see the output and what to do with it.</p>
+  </div>
+  <div class="out-tabs" id="outTabs">
+    <button class="ot on" onclick="showO('agent',this)">🤖 Agent</button>
+    <button class="ot" onclick="showO('callflow',this)">📞 Calls</button>
+    <button class="ot" onclick="showO('sms',this)">💬 SMS</button>
+    <button class="ot" onclick="showO('ghl',this)">⚙️ GHL</button>
+    <button class="ot" onclick="showO('roi',this)">💰 ROI</button>
+    <button class="ot" onclick="showO('welcome',this)">📧 Email</button>
+  </div>
+  <div class="os on" id="o-agent"></div>
+  <div class="os" id="o-callflow"></div>
+  <div class="os" id="o-sms"></div>
+  <div class="os" id="o-ghl"></div>
+  <div class="os" id="o-roi"></div>
+  <div class="os" id="o-welcome"></div>
+  <div class="out-actions">
+    <button class="oa pri" onclick="copyAll()">📋 Copy Everything</button>
+    <button class="oa" onclick="go(1)">🔄 Build Another Client</button>
+  </div>
+</div>
+
+</div></div>
+
+<div class="bot-nav" id="botNav">
+  <div class="bot-inner">
+    <button class="b-back" id="bBack" onclick="prev()" style="display:none">← Back</button>
+    <button class="b-next" id="bNext" onclick="next()">Continue →</button>
+  </div>
+</div>
+
+<script>
+let cur=1; let sel={}; let outs={};
+
+function pick(el,key,val){
+  el.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel'); sel[key]=val;
+}
+function v(id){return document.getElementById(id)?.value?.trim()||''}
+
+function updateProg(){
+  for(let i=1;i<=6;i++){
+    const p=document.getElementById('ps'+i);p.classList.remove('active','done');
+    if(i<cur)p.classList.add('done');
+    if(i===cur||(cur===7&&i===6))p.classList.add(cur===7?'done':'active');
+    if(i<6)document.getElementById('pc'+i).classList.toggle('done',i<cur);
+  }
+  document.getElementById('progFill').style.width=(cur>=7?100:((cur-1)/6)*100)+'%';
+}
+
+function go(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  cur=n; updateProg();
+  document.getElementById('bBack').style.display=n>1&&n<=6?'block':'none';
+  document.getElementById('botNav').style.display=n===7?'none':'flex';
+  if(n===6){document.getElementById('bNext').textContent='⚡ Build Client Package';buildRev();}
+  else if(n<=5)document.getElementById('bNext').textContent='Continue →';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function next(){if(cur===6){runBuild();return}if(cur<7)go(cur+1)}
+function prev(){if(cur>1)go(cur-1)}
+
+function buildRev(){
+  const rows=[['Business',v('bizName')],['Owner',v('ownerName')],['Industry',sel.industry||'—'],['Phone',v('bizPhone')],['Area',v('serviceArea')],['Services',v('services')?.substring(0,60)+'...'],['Hours',v('hours')],['Emergency',sel.emergency||'—'],['Calendar',sel.calendar||'—'],['Team',v('teamSize')],['AI Name',v('aiName')||'Alex'],['Tone',sel.tone||'—'],['Monthly Calls',v('monthlyCalls')],['Missed %',v('missedPct')?v('missedPct')+'%':'—'],['Avg Job',v('avgJob')?'$'+v('avgJob'):'—'],['Answers Now',sel.whoAnswers||'—']];
+  document.getElementById('revBox').innerHTML='<div class="rev-table">'+rows.map(([l,val])=>`<div class="rev-row"><span class="rl">${l}</span><span class="rv">${val}</span></div>`).join('')+'</div>';
+}
+
+function allInput(){
+  return `BUSINESS: ${v('bizName')}\nOWNER: ${v('ownerName')}\nINDUSTRY: ${sel.industry||''}\nPHONE: ${v('bizPhone')}\nAREA: ${v('serviceArea')}\nSERVICES: ${v('services')}\nHOURS: ${v('hours')}\nEMERGENCY: ${sel.emergency||''}\nPRICING: ${v('pricing')}\nCALENDAR: ${sel.calendar||''}\nTEAM: ${v('teamSize')}\nBOOKING: ${sel.bookWindow||''}\nAI NAME: ${v('aiName')||'Alex'}\nTONE: ${sel.tone||''}\nRESTRICTIONS: ${v('restrictions')}\nQUALIFYING Qs: ${v('qualQs')}\nALERTS: ${v('alerts')}\nMONTHLY CALLS: ${v('monthlyCalls')}\nMISSED %: ${v('missedPct')}\nAVG JOB: ${v('avgJob')}\nCURRENT: ${sel.whoAnswers||''}`;
+}
+
+const P={
+  agent:i=>`You are an expert AI agent designer. Generate a complete, production-ready SYSTEM PROMPT for an AI phone agent for this trade service company. Include: identity/greeting, personality, knowledge base, call flows (emergency/routine/quote/existing customer), qualifying questions, booking logic, escalation rules, restrictions, closing scripts.\n\n${i}`,
+  callflow:i=>`Design detailed call flows: new customer (emergency/routine/quote), existing customer, missed call text-back, after-hours, escalation. Show trigger→steps→decisions→outcomes.\n\n${i}`,
+  sms:i=>`Generate 10 SMS templates: missed call text-back, appointment confirm, 24hr reminder, tech en-route, post-service thanks, review request (2hr after), 30-day check-in, stale lead (7 day), emergency alert to owner, new lead alert. Use {{merge_fields}}.\n\n${i}`,
+  ghl:i=>`Generate GoHighLevel config: sub-account setup, custom fields, pipeline/stages, 5 workflows with triggers/conditions/actions, calendar setup, tags. Step-by-step.\n\n${i}`,
+  roi:i=>`Generate ROI report: current missed calls & revenue lost, with AI (85% capture rate) jobs/revenue recovered, investment ($497/mo $997 setup) vs return, additional value. Use their numbers.\n\n${i}`,
+  welcome:i=>`Write welcome email from "Silas" at "[Your Company]": thank, confirm, timeline (<1 week), numbered next steps, confirm their details. Also write a kickoff call agenda.\n\n${i}`
+};
+
+const L={agent:'🤖 AI Agent System Prompt',callflow:'📞 Call Flow Logic',sms:'💬 SMS Templates',ghl:'⚙️ GoHighLevel Config',roi:'💰 ROI Report',welcome:'📧 Welcome Email'};
+
+const WTD={
+  agent:'<strong>What to do with this:</strong> This is the brain of the AI agent — its complete personality and instructions. Copy this and paste it as the system prompt in your AI voice platform (Vapi, Bland, Retell, or similar). It tells the AI exactly how to answer calls, what to say, and how to handle every situation.',
+  callflow:'<strong>What to do with this:</strong> This is your reference map for how calls flow through the system. Use it when setting up GoHighLevel workflows and when explaining to the client how their calls will be handled. Print it out and keep it next to your screen during setup.',
+  sms:'<strong>What to do with this:</strong> Copy each template into GoHighLevel\'s workflow SMS actions. The {{merge_fields}} will auto-fill with the contact\'s name, business name, etc. These are the texts that go out automatically when calls are missed, appointments are booked, reviews are requested, etc.',
+  ghl:'<strong>What to do with this:</strong> This is your step-by-step build checklist for GoHighLevel. Follow it in order: create the sub-account, add custom fields, build the pipeline, then set up each workflow. Check off each item as you build it.',
+  roi:'<strong>What to do with this:</strong> Send this to the client as part of their first monthly report. It shows them exactly how much revenue the AI is recovering. Update the numbers with real data after month one to make it even more powerful for retention.',
+  welcome:'<strong>What to do with this:</strong> Send this email to the client immediately after they sign up. It confirms what they bought, sets expectations, and tells them exactly what happens next. The kickoff agenda is for your 30-minute discovery call with them.'
+};
+
+async function api(prompt){
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt+"\n\nBe thorough and production-ready."}]})});
+  const d=await r.json();
+  if(d.content?.[0]?.text) return d.content[0].text;
+  throw new Error(d.error?.message || "Invalid response");
+}
+
+async function runBuild(){
+  document.getElementById('revBox').style.display='none';
+  document.getElementById('genBox').style.display='block';
+  document.getElementById('bNext').disabled=true;
+  document.getElementById('bNext').textContent='Building...';
+  document.getElementById('bBack').style.display='none';
+
+  const input=allInput();
+  const tabs=['agent','callflow','sms','ghl','roi','welcome'];
+  outs={};
+  tabs.forEach(t=>{const el=document.getElementById('g-'+t);el.className='gi';el.querySelector('.ic').textContent='○'});
+
+  for(let i=0;i<tabs.length;i++){
+    const t=tabs[i],el=document.getElementById('g-'+t);
+    el.className='gi on';el.querySelector('.ic').textContent='◉';
+    document.getElementById('genMsg').textContent='Generating '+L[t].split(' ').slice(1).join(' ')+'...';
+    try{outs[t]=await api(P[t](input))}catch(e){outs[t]='Error: '+e.message+'\n\nMake sure you opened this file in Chrome or Safari (not inside the Claude chat preview).'}
+    el.className='gi done';el.querySelector('.ic').textContent='✓';
+
+    document.getElementById('o-'+t).innerHTML=`
+      <div class="wtd">${WTD[t]}</div>
+      <div class="ob"><div class="ob-head"><h3>${L[t]}</h3><button class="cp" onclick="cpOne('${t}')">Copy</button></div><div class="ob-body">${esc(outs[t])}</div></div>`;
+  }
+
+  document.getElementById('bNext').disabled=false;
+  document.getElementById('bNext').textContent='⚡ Build Client Package';
+  go(7);
+}
+
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
+function showO(id,btn){document.querySelectorAll('.ot').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.os').forEach(s=>s.classList.remove('on'));btn.classList.add('on');document.getElementById('o-'+id).classList.add('on')}
+function cpOne(id){if(outs[id])navigator.clipboard.writeText(outs[id]).then(()=>{const b=event.target;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',1500)})}
+function copyAll(){let f='';['agent','callflow','sms','ghl','roi','welcome'].forEach(t=>{if(outs[t])f+=`\n${'='.repeat(60)}\n${L[t].toUpperCase()}\n${'='.repeat(60)}\n\n${outs[t]}\n\n`});navigator.clipboard.writeText(f.trim()).then(()=>{const b=event.target;b.textContent='✓ Copied!';setTimeout(()=>b.textContent='📋 Copy Everything',2000)})}
+</script>
+</body>
+</html>

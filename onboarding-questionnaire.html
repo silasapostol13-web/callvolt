@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Onboarding Questionnaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fafaf9;--surface:#fff;--dark:#18181b;--muted:#71717a;--border:#e4e4e7;--accent:#f97316;--accent-light:#fff3e8;--accent-dark:#ea6c0a;--blue:#0284c7;--red:#dc2626}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--dark);padding:40px 20px;min-height:100vh}
+.container{max-width:680px;margin:0 auto}
+.header{text-align:center;margin-bottom:48px}
+.header .tag{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px}
+.header h1{font-size:1.8rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px}
+.header p{color:var(--muted);font-size:0.92rem}
+
+.progress-bar{background:var(--border);border-radius:100px;height:6px;margin-bottom:40px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:100px;transition:width 0.4s ease;width:0%}
+
+.step{display:none}
+.step.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.step-label{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.step h2{font-size:1.4rem;font-weight:700;margin-bottom:6px}
+.step .step-desc{color:var(--muted);font-size:0.88rem;margin-bottom:32px}
+
+.field{margin-bottom:24px}
+.field label{display:block;font-weight:600;font-size:0.88rem;margin-bottom:8px}
+.field .hint{font-size:0.78rem;color:var(--muted);margin-bottom:8px}
+.field input,.field textarea,.field select{
+  width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:0.92rem;color:var(--dark);background:var(--surface);
+  outline:none;transition:border-color 0.2s
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:100px}
+.field input::placeholder,.field textarea::placeholder{color:#a1a1aa}
+
+.checkbox-group{display:flex;flex-wrap:wrap;gap:8px}
+.checkbox-group label{
+  padding:10px 18px;border:1px solid var(--border);border-radius:8px;
+  cursor:pointer;font-size:0.85rem;font-weight:500;transition:all 0.2s;
+  display:flex;align-items:center;gap:8px;background:var(--surface)
+}
+.checkbox-group label:hover{border-color:var(--accent)}
+.checkbox-group input{display:none}
+.checkbox-group input:checked+span{color:var(--accent-dark)}
+.checkbox-group label:has(input:checked){background:var(--accent-light);border-color:var(--accent)}
+
+.radio-group{display:flex;flex-direction:column;gap:8px}
+.radio-group label{
+  padding:14px 18px;border:1px solid var(--border);border-radius:10px;
+  cursor:pointer;font-size:0.88rem;transition:all 0.2s;display:flex;align-items:center;gap:12px;background:var(--surface)
+}
+.radio-group label:hover{border-color:var(--accent)}
+.radio-group input{display:none}
+.radio-group label:has(input:checked){background:var(--accent-light);border-color:var(--accent)}
+.radio-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;position:relative;transition:all 0.2s}
+.radio-group label:has(input:checked) .radio-dot{border-color:var(--accent);background:var(--accent)}
+.radio-group label:has(input:checked) .radio-dot::after{content:'';position:absolute;top:4px;left:4px;width:6px;height:6px;background:#fff;border-radius:50%}
+
+.actions{display:flex;justify-content:space-between;margin-top:40px;padding-top:24px;border-top:1px solid var(--border)}
+.btn{padding:12px 28px;border-radius:10px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.92rem;cursor:pointer;transition:all 0.2s;border:none}
+.btn-next{background:var(--accent);color:#fff}
+.btn-next:hover{background:var(--accent-dark);transform:translateY(-1px)}
+.btn-back{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-back:hover{border-color:var(--dark);color:var(--dark)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none!important}
+
+.summary-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
+.summary-section h3{font-size:0.95rem;font-weight:700;margin-bottom:14px;color:var(--accent)}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f4f4f5;font-size:0.85rem}
+.summary-row:last-child{border:none}
+.summary-row .label{color:var(--muted)}
+.summary-row .value{font-weight:600;text-align:right;max-width:60%}
+
+.export-btns{display:flex;gap:12px;justify-content:center;margin-top:32px}
+
+.success-msg{text-align:center;padding:60px 20px}
+.success-msg .icon{font-size:3rem;margin-bottom:16px}
+.success-msg h2{font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.success-msg p{color:var(--muted);font-size:0.92rem;max-width:400px;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="tag">Client Onboarding</div>
+    <h1>Let's Set Up Your AI Agent</h1>
+    <p>This takes about 5 minutes. Everything here helps us build an AI receptionist that sounds like it works for your company.</p>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- STEP 1: Business Basics -->
+  <div class="step active" data-step="1">
+    <div class="step-label">Step 1 of 6</div>
+    <h2>Business Basics</h2>
+    <div class="step-desc">Tell us about your company so the AI knows who it's representing.</div>
+
+    <div class="field">
+      <label>Business Name *</label>
+      <input type="text" id="bizName" placeholder="e.g. Charlotte Pro Plumbing">
+    </div>
+    <div class="field">
+      <label>Owner / Primary Contact Name *</label>
+      <input type="text" id="ownerName" placeholder="e.g. John Smith">
+    </div>
+    <div class="field">
+      <label>Phone Number (main business line) *</label>
+      <input type="tel" id="bizPhone" placeholder="(704) 555-0123">
+    </div>
+    <div class="field">
+      <label>Email Address *</label>
+      <input type="email" id="bizEmail" placeholder="john@charlotteplumbing.com">
+    </div>
+    <div class="field">
+      <label>Website (if applicable)</label>
+      <input type="url" id="bizWebsite" placeholder="https://charlotteplumbing.com">
+    </div>
+    <div class="field">
+      <label>Industry *</label>
+      <div class="radio-group">
+        <label><input type="radio" name="industry" value="Plumbing"><div class="radio-dot"></div>Plumbing</label>
+        <label><input type="radio" name="industry" value="HVAC"><div class="radio-dot"></div>HVAC</label>
+        <label><input type="radio" name="industry" value="Pest Control"><div class="radio-dot"></div>Pest Control</label>
+        <label><input type="radio" name="industry" value="Electrical"><div class="radio-dot"></div>Electrical</label>
+        <label><input type="radio" name="industry" value="Other"><div class="radio-dot"></div>Other (specify below)</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>If "Other," specify:</label>
+      <input type="text" id="industryOther" placeholder="e.g. Landscaping, Roofing, etc.">
+    </div>
+
+    <div class="actions">
+      <div></div>
+      <button class="btn btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Services & Service Area -->
+  <div class="step" data-step="2">
+    <div class="step-label">Step 2 of 6</div>
+    <h2>Services & Coverage</h2>
+    <div class="step-desc">What do you offer and where do you work? This trains the AI to qualify calls correctly.</div>
+
+    <div class="field">
+      <label>List your main services *</label>
+      <div class="hint">Separate each service with a comma. Be specific — the AI will use these when talking to callers.</div>
+      <textarea id="services" placeholder="e.g. Emergency leak repair, drain cleaning, water heater installation, sewer line repair, faucet/fixture replacement, pipe relining"></textarea>
+    </div>
+    <div class="field">
+      <label>Service area — cities/zip codes *</label>
+      <textarea id="serviceArea" placeholder="e.g. Charlotte, Matthews, Mint Hill, Pineville, Huntersville — ZIP codes 28202-28278"></textarea>
+    </div>
+    <div class="field">
+      <label>Do you offer emergency / same-day service?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="emergency" value="Yes — 24/7 emergency"><div class="radio-dot"></div>Yes — 24/7 emergency dispatch</label>
+        <label><input type="radio" name="emergency" value="Yes — during business hours only"><div class="radio-dot"></div>Yes — same-day during business hours</label>
+        <label><input type="radio" name="emergency" value="No"><div class="radio-dot"></div>No — appointment only</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Approximate pricing or dispatch/diagnostic fee (if applicable)</label>
+      <div class="hint">The AI won't quote exact prices unless you want it to. This helps it give ballpark info when asked.</div>
+      <textarea id="pricing" placeholder="e.g. $89 diagnostic fee (applied toward repair), emergency dispatch $129, drain cleaning starts at $150"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Hours & Scheduling -->
+  <div class="step" data-step="3">
+    <div class="step-label">Step 3 of 6</div>
+    <h2>Hours & Scheduling</h2>
+    <div class="step-desc">When are you open, and how should the AI book appointments?</div>
+
+    <div class="field">
+      <label>Business Hours *</label>
+      <textarea id="hours" placeholder="e.g. Mon-Fri 7 AM - 6 PM, Sat 8 AM - 2 PM, Closed Sunday (but available for emergencies)"></textarea>
+    </div>
+    <div class="field">
+      <label>What calendar/scheduling tool do you use?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="calendar" value="Google Calendar"><div class="radio-dot"></div>Google Calendar</label>
+        <label><input type="radio" name="calendar" value="Housecall Pro"><div class="radio-dot"></div>Housecall Pro</label>
+        <label><input type="radio" name="calendar" value="ServiceTitan"><div class="radio-dot"></div>ServiceTitan</label>
+        <label><input type="radio" name="calendar" value="Jobber"><div class="radio-dot"></div>Jobber</label>
+        <label><input type="radio" name="calendar" value="None / Paper"><div class="radio-dot"></div>None / paper-based</label>
+        <label><input type="radio" name="calendar" value="Other"><div class="radio-dot"></div>Other (specify below)</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>If "Other," specify:</label>
+      <input type="text" id="calendarOther" placeholder="e.g. FieldEdge, Kickserv, etc.">
+    </div>
+    <div class="field">
+      <label>How many trucks / technicians do you have?</label>
+      <input type="text" id="teamSize" placeholder="e.g. 3 trucks, 4 technicians">
+    </div>
+    <div class="field">
+      <label>How far out should the AI book appointments?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="bookWindow" value="Same day / next available"><div class="radio-dot"></div>Same day / next available</label>
+        <label><input type="radio" name="bookWindow" value="Up to 1 week out"><div class="radio-dot"></div>Up to 1 week out</label>
+        <label><input type="radio" name="bookWindow" value="Up to 2 weeks out"><div class="radio-dot"></div>Up to 2 weeks out</label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Call Handling Preferences -->
+  <div class="step" data-step="4">
+    <div class="step-label">Step 4 of 6</div>
+    <h2>Call Handling Preferences</h2>
+    <div class="step-desc">How should the AI represent your business on the phone?</div>
+
+    <div class="field">
+      <label>What name should the AI introduce itself as?</label>
+      <div class="hint">e.g. "Thank you for calling [Business], this is [Name]." Pick a name or leave blank for generic.</div>
+      <input type="text" id="aiName" placeholder="e.g. Alex, Sam, Jordan (or leave blank)">
+    </div>
+    <div class="field">
+      <label>Preferred tone / personality</label>
+      <div class="radio-group">
+        <label><input type="radio" name="tone" value="Friendly & casual"><div class="radio-dot"></div>Friendly & casual — like a helpful neighbor</label>
+        <label><input type="radio" name="tone" value="Professional & warm"><div class="radio-dot"></div>Professional & warm — polished but personable</label>
+        <label><input type="radio" name="tone" value="Strictly professional"><div class="radio-dot"></div>Strictly professional — all business</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>When should the AI alert you directly? (check all that apply)</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" value="Emergency calls"><span>Emergency calls</span></label>
+        <label><input type="checkbox" value="Large job requests"><span>Large job requests</span></label>
+        <label><input type="checkbox" value="Commercial inquiries"><span>Commercial inquiries</span></label>
+        <label><input type="checkbox" value="Angry / escalated callers"><span>Angry / escalated callers</span></label>
+        <label><input type="checkbox" value="All calls"><span>All calls (summary)</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label>What should the AI NOT do?</label>
+      <div class="hint">Any boundaries you want to set — e.g. don't quote exact prices, don't schedule on Sundays, etc.</div>
+      <textarea id="restrictions" placeholder="e.g. Don't give exact prices over the phone, don't schedule anything before 8 AM, always collect the caller's address"></textarea>
+    </div>
+    <div class="field">
+      <label>Any specific qualifying questions you want the AI to ask?</label>
+      <textarea id="qualifyingQs" placeholder="e.g. Is this a residential or commercial property? How old is the unit? Is water actively leaking?"></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Current Situation -->
+  <div class="step" data-step="5">
+    <div class="step-label">Step 5 of 6</div>
+    <h2>Your Current Situation</h2>
+    <div class="step-desc">This helps us establish your baseline so we can measure results.</div>
+
+    <div class="field">
+      <label>How many inbound calls do you get per month (estimate)?</label>
+      <input type="text" id="monthlyCallsEst" placeholder="e.g. 100-150">
+    </div>
+    <div class="field">
+      <label>How many of those do you think you miss?</label>
+      <input type="text" id="missedCallsEst" placeholder="e.g. 20-30, or 'not sure'">
+    </div>
+    <div class="field">
+      <label>Who currently answers your phones?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="currentAnswer" value="Owner"><div class="radio-dot"></div>Me (the owner)</label>
+        <label><input type="radio" name="currentAnswer" value="Office staff"><div class="radio-dot"></div>Office staff / receptionist</label>
+        <label><input type="radio" name="currentAnswer" value="Call center"><div class="radio-dot"></div>Answering service / call center</label>
+        <label><input type="radio" name="currentAnswer" value="Voicemail"><div class="radio-dot"></div>Goes to voicemail</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Average job value (rough estimate)?</label>
+      <input type="text" id="avgJobValue" placeholder="e.g. $200-$300">
+    </div>
+    <div class="field">
+      <label>What CRM or software do you use to manage leads/jobs?</label>
+      <input type="text" id="currentCRM" placeholder="e.g. Housecall Pro, spreadsheet, pen & paper, nothing">
+    </div>
+    <div class="field">
+      <label>What's the biggest pain point with your current phone situation?</label>
+      <textarea id="painPoint" placeholder="e.g. I miss calls when I'm on a job and lose customers, I'm burned out answering the phone at 11 PM, etc."></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn btn-next" onclick="nextStep()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- STEP 6: Review & Submit -->
+  <div class="step" data-step="6">
+    <div class="step-label">Step 6 of 6</div>
+    <h2>Review & Confirm</h2>
+    <div class="step-desc">Make sure everything looks right. You can go back and edit any section.</div>
+
+    <div id="summaryContent"></div>
+
+    <div class="export-btns">
+      <button class="btn btn-next" onclick="exportText()">📋 Copy as Text</button>
+      <button class="btn btn-back" onclick="printSummary()">🖨️ Print</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-back" onclick="prevStep()">← Back</button>
+      <button class="btn btn-next" onclick="showSuccess()">✓ Submit Questionnaire</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="step" data-step="7">
+    <div class="success-msg">
+      <div class="icon">🎉</div>
+      <h2>You're All Set!</h2>
+      <p>We have everything we need to start building your AI agent. You'll hear from us within 24 hours with next steps.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 6;
+
+function updateProgress() {
+  const pct = ((currentStep - 1) / totalSteps) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.step[data-step="${n}"]`).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateProgress();
+}
+
+function nextStep() {
+  if (currentStep === 5) buildSummary();
+  if (currentStep < 7) { currentStep++; showStep(currentStep); }
+}
+function prevStep() {
+  if (currentStep > 1) { currentStep--; showStep(currentStep); }
+}
+function showSuccess() { currentStep = 7; showStep(7); }
+
+function getVal(id) { return document.getElementById(id)?.value || '—'; }
+function getRadio(name) { const r = document.querySelector(`input[name="${name}"]:checked`); return r ? r.value : '—'; }
+function getChecked(parentQuery) {
+  const checks = document.querySelectorAll(`${parentQuery} input:checked`);
+  return checks.length ? Array.from(checks).map(c => c.value).join(', ') : '—';
+}
+
+function buildSummary() {
+  const sections = [
+    { title: 'Business Basics', rows: [
+      ['Business Name', getVal('bizName')],
+      ['Owner / Contact', getVal('ownerName')],
+      ['Phone', getVal('bizPhone')],
+      ['Email', getVal('bizEmail')],
+      ['Website', getVal('bizWebsite')],
+      ['Industry', getRadio('industry')],
+    ]},
+    { title: 'Services & Coverage', rows: [
+      ['Services', getVal('services')],
+      ['Service Area', getVal('serviceArea')],
+      ['Emergency Service', getRadio('emergency')],
+      ['Pricing Info', getVal('pricing')],
+    ]},
+    { title: 'Hours & Scheduling', rows: [
+      ['Business Hours', getVal('hours')],
+      ['Calendar Tool', getRadio('calendar')],
+      ['Team Size', getVal('teamSize')],
+      ['Booking Window', getRadio('bookWindow')],
+    ]},
+    { title: 'Call Handling', rows: [
+      ['AI Name', getVal('aiName') || 'Default'],
+      ['Tone', getRadio('tone')],
+      ['Alert Triggers', getChecked('.checkbox-group')],
+      ['Restrictions', getVal('restrictions')],
+      ['Qualifying Qs', getVal('qualifyingQs')],
+    ]},
+    { title: 'Current Situation', rows: [
+      ['Monthly Calls', getVal('monthlyCallsEst')],
+      ['Missed Calls Est.', getVal('missedCallsEst')],
+      ['Current Answering', getRadio('currentAnswer')],
+      ['Avg Job Value', getVal('avgJobValue')],
+      ['Current CRM', getVal('currentCRM')],
+      ['Main Pain Point', getVal('painPoint')],
+    ]},
+  ];
+
+  let html = '';
+  sections.forEach(s => {
+    html += `<div class="summary-section"><h3>${s.title}</h3>`;
+    s.rows.forEach(([l, v]) => {
+      html += `<div class="summary-row"><span class="label">${l}</span><span class="value">${v}</span></div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('summaryContent').innerHTML = html;
+}
+
+function exportText() {
+  const rows = document.querySelectorAll('#summaryContent .summary-section');
+  let text = '=== CLIENT ONBOARDING QUESTIONNAIRE ===\n\n';
+  rows.forEach(section => {
+    text += section.querySelector('h3').textContent.toUpperCase() + '\n';
+    section.querySelectorAll('.summary-row').forEach(row => {
+      const label = row.querySelector('.label').textContent;
+      const value = row.querySelector('.value').textContent;
+      text += `  ${label}: ${value}\n`;
+    });
+    text += '\n';
+  });
+  navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+}
+
+function printSummary() { window.print(); }
+
+updateProgress();
+</script>
+</body>
+</html>
